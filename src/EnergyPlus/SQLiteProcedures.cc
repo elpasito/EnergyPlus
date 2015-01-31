@@ -34,10 +34,119 @@ const std::string SQLite::UnitsId             = "6";
 
 std::unique_ptr<SQLite> sqlite;
 
+<<<<<<< HEAD
 SQLite::SQLite()
 	:
 	m_writeOutputToSQLite(false),
 	m_writeTabularDataToSQLite(false),
+=======
+std::unique_ptr<SQLite> CreateSQLiteDatabase() {
+	try 
+	{
+		int numberOfSQLiteObjects = InputProcessor::GetNumObjectsFound("Output:SQLite");
+		bool writeOutputToSQLite = false;
+		bool writeTabularDataToSQLite = false;
+
+		if( numberOfSQLiteObjects == 1 ) {
+			FArray1D_string alphas(5);
+			int numAlphas;
+			FArray1D< Real64 > numbers(2);
+			int numNumbers;
+			int status;
+
+			InputProcessor::GetObjectItem("Output:SQLite",1,alphas,numAlphas,numbers,numNumbers,status);
+			if( numAlphas > 0 ) {
+				std::string option = alphas(1);
+				if( InputProcessor::SameString(option,"SimpleAndTabular") ) {
+					writeTabularDataToSQLite = true;
+					writeOutputToSQLite = true;
+				} else if( InputProcessor::SameString(option,"Simple") ) {
+					writeOutputToSQLite = true;
+				}
+			}
+		}
+		std::ofstream errorStream;
+		errorStream.open(DataStringGlobals::outputSqliteErrFileName, std::ofstream::out | std::ofstream::trunc);
+		return std::unique_ptr<SQLite>(new SQLite( errorStream, DataStringGlobals::outputSqlFileName, DataStringGlobals::outputSqliteErrFileName, writeOutputToSQLite, writeTabularDataToSQLite ));
+	} catch( const std::runtime_error& error ) {
+		ShowFatalError(error.what());
+		return nullptr;
+	}
+}
+
+void CreateSQLiteZoneExtendedOutput() {
+	if( sqlite && sqlite->writeOutputToSQLite() ) {
+		for( int zoneNum = 1; zoneNum <= DataGlobals::NumOfZones; ++zoneNum) {
+			sqlite->addZoneData( zoneNum, DataHeatBalance::Zone(zoneNum) );
+		}
+		for(int listNum = 1; listNum <= DataHeatBalance::NumOfZoneLists; ++listNum) {
+			sqlite->addZoneListData(  listNum, DataHeatBalance::ZoneList(listNum) );
+		}
+		for(int groupNum = 1; groupNum <= DataHeatBalance::NumOfZoneGroups; ++groupNum) {
+			sqlite->addZoneGroupData( groupNum, DataHeatBalance::ZoneGroup(groupNum) );
+		}
+		for( int scheduleNumber = 1, numberOfSchedules = ScheduleManager::GetNumberOfSchedules(); scheduleNumber <= numberOfSchedules; ++scheduleNumber) {
+			sqlite->addScheduleData( scheduleNumber, ScheduleManager::GetScheduleName(scheduleNumber), ScheduleManager::GetScheduleType(scheduleNumber), 
+				ScheduleManager::GetScheduleMinValue(scheduleNumber), ScheduleManager::GetScheduleMaxValue(scheduleNumber) );
+		}
+		for( int surfaceNumber = 1; surfaceNumber <= DataSurfaces::TotSurfaces; ++surfaceNumber ) {
+			auto const & surface = DataSurfaces::Surface(surfaceNumber);
+			sqlite->addSurfaceData( surfaceNumber, surface, DataSurfaces::cSurfaceClass(surface.Class) );
+		}
+		for(int materialNum = 1; materialNum <= DataHeatBalance::TotMaterials; ++materialNum) {
+			sqlite->addMaterialData( materialNum, DataHeatBalance::Material(materialNum) );
+		}
+		for(int constructNum = 1; constructNum <= DataHeatBalance::TotConstructs; ++constructNum) {
+			auto const & construction = DataHeatBalance::Construct(constructNum);
+			if(construction.TotGlassLayers == 0) {
+				sqlite->addConstructionData( constructNum, construction, construction.UValue );
+			} else {
+				sqlite->addConstructionData( constructNum, construction, DataHeatBalance::NominalU(constructNum) );
+			}
+		}
+		for(int lightNum = 1; lightNum <= DataHeatBalance::TotLights; ++lightNum) {
+			sqlite->addNominalLightingData( lightNum, DataHeatBalance::Lights(lightNum) );
+		}
+		for(int peopleNum = 1; peopleNum <= DataHeatBalance::TotPeople; ++peopleNum) {
+			sqlite->addNominalPeopleData( peopleNum, DataHeatBalance::People(peopleNum) );
+		}
+		for(int elecEquipNum = 1; elecEquipNum <= DataHeatBalance::TotElecEquip; ++elecEquipNum) {
+			sqlite->addNominalElectricEquipmentData( elecEquipNum, DataHeatBalance::ZoneElectric(elecEquipNum) );
+		}
+		for(int gasEquipNum = 1; gasEquipNum <= DataHeatBalance::TotGasEquip; ++gasEquipNum) {
+			sqlite->addNominalGasEquipmentData( gasEquipNum, DataHeatBalance::ZoneGas(gasEquipNum) );
+		}
+		for(int steamEquipNum = 1; steamEquipNum <= DataHeatBalance::TotStmEquip; ++steamEquipNum) {
+			sqlite->addNominalSteamEquipmentData( steamEquipNum, DataHeatBalance::ZoneSteamEq(steamEquipNum) );
+		}
+		for(int hWEquipNum = 1; hWEquipNum <= DataHeatBalance::TotHWEquip; ++hWEquipNum) {
+			sqlite->addNominalHotWaterEquipmentData( hWEquipNum, DataHeatBalance::ZoneHWEq(hWEquipNum) );
+		}
+		for(int otherEquipNum = 1; otherEquipNum <= DataHeatBalance::TotOthEquip; ++otherEquipNum) {
+			sqlite->addNominalOtherEquipmentData( otherEquipNum, DataHeatBalance::ZoneOtherEq(otherEquipNum) );
+		}
+		for(int bBHeatNum = 1; bBHeatNum <= DataHeatBalance::TotBBHeat; ++bBHeatNum) {
+			sqlite->addNominalBaseboardData( bBHeatNum, DataHeatBalance::ZoneBBHeat(bBHeatNum) );
+		}
+		for(int infilNum = 1; infilNum <= DataHeatBalance::TotInfiltration; ++infilNum) {
+			sqlite->addInfiltrationData( infilNum, DataHeatBalance::Infiltration(infilNum) );
+		}
+		for(int ventNum = 1; ventNum <= DataHeatBalance::TotVentilation; ++ventNum) {
+			sqlite->addVentilationData( ventNum, DataHeatBalance::Ventilation(ventNum) );
+		}
+		for(int zoneNum = 1; zoneNum <= DataGlobals::NumOfZones; ++zoneNum) {
+			sqlite->addRoomAirModelData( zoneNum, DataRoomAirModel::AirModel(zoneNum) );
+		}
+
+		sqlite->createZoneExtendedOutput();
+	}
+}
+
+SQLite::SQLite( std::ostream & errorStream, std::string const & dbName, std::string const & errorFileName, bool writeOutputToSQLite, bool writeTabularDataToSQLite )
+	: 
+	SQLiteProcedures(errorStream, writeOutputToSQLite, dbName, errorFileName),
+	m_writeTabularDataToSQLite(writeTabularDataToSQLite),
+>>>>>>> 3e6eb0a... Add zoneList and zoneGroup, add more integration
 	m_sqlDBTimeIndex(0),
 	m_db(nullptr),
 	m_dbName("eplusout.sql"),
@@ -46,6 +155,9 @@ SQLite::SQLite()
 	m_timeIndexInsertStmt(nullptr),
 	m_reportVariableDictionaryInsertStmt(nullptr),
 	m_zoneInfoInsertStmt(nullptr),
+	m_zoneListInsertStmt(nullptr),
+	m_zoneGroupInsertStmt(nullptr),
+	m_zoneInfoZoneListInsertStmt(nullptr),
 	m_nominalLightingInsertStmt(nullptr),
 	m_nominalElectricEquipmentInsertStmt(nullptr),
 	m_nominalGasEquipmentInsertStmt(nullptr),
@@ -57,8 +169,6 @@ SQLite::SQLite()
 	m_constructionInsertStmt(nullptr),
 	m_constructionLayerInsertStmt(nullptr),
 	m_materialInsertStmt(nullptr),
-	m_zoneListInsertStmt(nullptr),
-	m_zoneGroupInsertStmt(nullptr),
 	m_infiltrationInsertStmt(nullptr),
 	m_ventilationInsertStmt(nullptr),
 	m_nominalPeopleInsertStmt(nullptr),
@@ -106,6 +216,7 @@ SQLite::SQLite()
 	}
 
 	if( m_writeOutputToSQLite ) {
+<<<<<<< HEAD
 		int rc = -1;
 		bool ok = true;
 		m_errorStream.open("sqlite.err", std::ofstream::out | std::ofstream::trunc);
@@ -202,6 +313,51 @@ SQLite::SQLite()
 			}
 		} else {
 			throw std::runtime_error("The SQLite database failed to open.");
+=======
+		sqliteExecuteCommand("PRAGMA locking_mode = EXCLUSIVE;");
+		sqliteExecuteCommand("PRAGMA journal_mode = OFF;");
+		sqliteExecuteCommand("PRAGMA synchronous = OFF;");
+		// Turn this to ON for Foreign Key constraints.
+		// This must be turned ON for every connection
+		// Currently, inserting into daylighting tables does not work with this ON. The ZoneIndex referenced by DaylightMaps does not exist in
+		// the database at the time data is inserted.
+		sqliteExecuteCommand("PRAGMA foreign_keys = OFF;");
+
+		initializeSimulationsTable();
+		initializeEnvironmentPeriodsTable();
+		initializeErrorsTable();
+		initializeTimeIndicesTable();
+		initializeZoneInfoTable();
+		initializeZoneListTable();
+		initializeZoneGroupTable();
+		initializeZoneInfoZoneListTable();
+		initializeSchedulesTable();
+		initializeMaterialsTable();
+		initializeConstructionsTables();
+		initializeSurfacesTable();
+		initializeReportDataDictionaryTable();
+		initializeReportDataTables();
+		initializeNominalPeopleTable();
+		initializeNominalLightingTable();
+		initializeNominalElectricEquipmentTable();
+		initializeNominalGasEquipmentTable();
+		initializeNominalSteamEquipmentTable();
+		initializeNominalHotWaterEquipmentTable();
+		initializeNominalOtherEquipmentTable();
+		initializeNominalBaseboardHeatTable();
+		initializeNominalInfiltrationTable();
+		initializeNominalVentilationTable();
+		initializeZoneSizingTable();
+		initializeSystemSizingTable();
+		initializeComponentSizingTable();
+		initializeRoomAirModelTable();
+		initializeDaylightMapTables();
+		initializeViews();
+
+		if(m_writeTabularDataToSQLite) {
+			initializeTabularDataTable();
+			initializeTabularDataView();
+>>>>>>> 3e6eb0a... Add zoneList and zoneGroup, add more integration
 		}
 	}
 }
@@ -215,6 +371,9 @@ SQLite::~SQLite()
 	sqlite3_finalize(m_timeIndexInsertStmt);
 	sqlite3_finalize(m_reportVariableDictionaryInsertStmt);
 	sqlite3_finalize(m_zoneInfoInsertStmt);
+	sqlite3_finalize(m_zoneListInsertStmt);
+	sqlite3_finalize(m_zoneGroupInsertStmt);
+	sqlite3_finalize(m_zoneInfoZoneListInsertStmt);
 	sqlite3_finalize(m_nominalLightingInsertStmt);
 	sqlite3_finalize(m_nominalElectricEquipmentInsertStmt);
 	sqlite3_finalize(m_nominalGasEquipmentInsertStmt);
@@ -226,8 +385,6 @@ SQLite::~SQLite()
 	sqlite3_finalize(m_constructionInsertStmt);
 	sqlite3_finalize(m_constructionLayerInsertStmt);
 	sqlite3_finalize(m_materialInsertStmt);
-	sqlite3_finalize(m_zoneListInsertStmt);
-	sqlite3_finalize(m_zoneGroupInsertStmt);
 	sqlite3_finalize(m_infiltrationInsertStmt);
 	sqlite3_finalize(m_ventilationInsertStmt);
 	sqlite3_finalize(m_nominalPeopleInsertStmt);
@@ -644,6 +801,30 @@ void SQLite::initializeZoneInfoTable()
 	sqlitePrepareStatement(m_zoneInfoInsertStmt,zoneInfoInsertSQL);
 }
 
+void SQLite::initializeZoneInfoZoneListTable()
+{
+	const std::string zoneInfoZoneListTableSQL =
+		"CREATE TABLE ZoneInfoZoneLists ("
+			"ZoneListIndex INTEGER NOT NULL, "
+			"ZoneIndex INTEGER NOT NULL, "
+			"PRIMARY KEY(ZoneListIndex, ZoneIndex), "
+			"FOREIGN KEY(ZoneListIndex) REFERENCES ZoneLists(ZoneListIndex) "
+				"ON DELETE CASCADE ON UPDATE CASCADE, "
+			"FOREIGN KEY(ZoneIndex) REFERENCES Zones(ZoneIndex) "
+				"ON DELETE CASCADE ON UPDATE CASCADE "
+			");";
+
+	sqliteExecuteCommand(zoneInfoZoneListTableSQL);
+
+	const std::string zoneInfoZoneListInsertSQL =
+		"INSERT INTO ZoneInfoZoneLists ("
+			"ZoneListIndex, "
+			"ZoneIndex) "
+		"VALUES (?,?);";
+
+	sqlitePrepareStatement(m_zoneInfoZoneListInsertStmt,zoneInfoZoneListInsertSQL);
+}
+
 void SQLite::initializeNominalPeopleTable()
 {
 	const std::string nominalPeopleTableSQL =
@@ -850,13 +1031,18 @@ void SQLite::initializeMaterialsTable()
 void SQLite::initializeZoneListTable()
 {
 	const std::string zoneListsTableSQL =
+<<<<<<< HEAD
 		"CREATE TABLE ZoneLists (ZoneListIndex INTEGER PRIMARY KEY, Name TEXT, "
 		"ZoneIndex INTEGER);";
+=======
+		"CREATE TABLE ZoneLists ( "
+			"ZoneListIndex INTEGER PRIMARY KEY, Name TEXT);";
+>>>>>>> 3e6eb0a... Add zoneList and zoneGroup, add more integration
 
 	sqliteExecuteCommand(zoneListsTableSQL);
 
 	const std::string zoneListInsertSQL =
-		"INSERT INTO ZoneLists VALUES(?,?,?);";
+		"INSERT INTO ZoneLists VALUES(?,?);";
 
 	sqlitePrepareStatement(m_zoneListInsertStmt,zoneListInsertSQL);
 }
@@ -864,12 +1050,19 @@ void SQLite::initializeZoneListTable()
 void SQLite::initializeZoneGroupTable()
 {
 	const std::string zoneGroupsTableSQL =
-		"CREATE TABLE ZoneGroups (ZoneGroupIndex INTEGER PRIMARY KEY, ZoneListName TEXT, ZoneListMultiplier INTEGER);";
+		"CREATE TABLE ZoneGroups ( "
+			"ZoneGroupIndex INTEGER PRIMARY KEY, "
+			"ZoneGroupName TEXT, "
+			"ZoneListIndex INTEGER, "
+			"ZoneListMultiplier INTEGER, "
+			"FOREIGN KEY(ZoneListIndex) REFERENCES ZoneLists(ZoneListIndex) "
+				"ON UPDATE CASCADE "
+			");";
 
 	sqliteExecuteCommand(zoneGroupsTableSQL);
 
 	const std::string zoneGroupInsertSQL =
-		"INSERT INTO ZoneGroups VALUES(?,?,?);";
+		"INSERT INTO ZoneGroups VALUES(?,?,?,?);";
 
 	sqlitePrepareStatement(m_zoneGroupInsertStmt,zoneGroupInsertSQL);
 }
@@ -2013,6 +2206,7 @@ void SQLite::updateSQLiteSimulationRecord(
 
 void SQLite::createSQLiteZoneTable()
 {
+<<<<<<< HEAD
 	int isPartOfTotalArea;
 
 	for( int zoneNum = 1; zoneNum <= DataGlobals::NumOfZones; ++zoneNum) {
@@ -2020,6 +2214,62 @@ void SQLite::createSQLiteZoneTable()
 			isPartOfTotalArea = 1;
 		} else {
 			isPartOfTotalArea = 0;
+=======
+	if( m_writeOutputToSQLite ) {
+		for(auto const & zone : zones) {
+			zone->insertIntoSQLite( m_zoneInfoInsertStmt );
+		}
+		for(auto const & zoneList : zoneLists) {
+			zoneList->insertIntoSQLite( m_zoneListInsertStmt, m_zoneInfoZoneListInsertStmt );
+		}
+		for(auto const & zoneGroup : zoneGroups) {
+			zoneGroup->insertIntoSQLite( m_zoneGroupInsertStmt );
+		}
+		for(auto const & schedule : schedules) {
+			schedule->insertIntoSQLite( m_scheduleInsertStmt );
+		}
+		for(auto const & material : materials) {
+			material->insertIntoSQLite( m_materialInsertStmt );
+		}
+		for(auto const & construction : constructions) {
+			construction->insertIntoSQLite( m_constructionInsertStmt, m_constructionLayerInsertStmt );
+		}
+		for(auto const & surface : surfaces) {
+			surface->insertIntoSQLite( m_surfaceInsertStmt );
+		}
+		for(auto const & nominalLighting : nominalLightings) {
+			nominalLighting->insertIntoSQLite( m_nominalLightingInsertStmt );
+		}
+		for(auto const & nominalPeople : nominalPeoples) {
+			nominalPeople->insertIntoSQLite( m_nominalPeopleInsertStmt );
+		}
+		for(auto const & nominalElectricEquipment : nominalElectricEquipments) {
+			nominalElectricEquipment->insertIntoSQLite( m_nominalElectricEquipmentInsertStmt );
+		}
+		for(auto const & nominalGasEquipment : nominalGasEquipments) {
+			nominalGasEquipment->insertIntoSQLite( m_nominalGasEquipmentInsertStmt );
+		}
+		for(auto const & nominalSteamEquipment : nominalSteamEquipments) {
+			nominalSteamEquipment->insertIntoSQLite( m_nominalSteamEquipmentInsertStmt );
+		}
+		for(auto const & nominalHotWaterEquipment : nominalHotWaterEquipments) {
+			nominalHotWaterEquipment->insertIntoSQLite( m_nominalHotWaterEquipmentInsertStmt );
+		}
+		for(auto const & nominalOtherEquipment : nominalOtherEquipments) {
+			nominalOtherEquipment->insertIntoSQLite( m_nominalOtherEquipmentInsertStmt );
+		}
+		for(auto const & nominalBaseboardHeat : nominalBaseboardHeats) {
+			nominalBaseboardHeat->insertIntoSQLite( m_nominalBaseboardHeatInsertStmt );
+		}
+		for(auto const & infiltration : infiltrations ) {
+			infiltration->insertIntoSQLite( m_infiltrationInsertStmt );
+		}
+		for(auto const & ventilation : ventilations) {
+			ventilation->insertIntoSQLite( m_ventilationInsertStmt );
+		}
+		for(auto const & roomAirModel : roomAirModels) {
+			roomAirModel->insertIntoSQLite( m_roomAirModelInsertStmt );
+>>>>>>> 3e6eb0a... Add zoneList and zoneGroup, add more integration
 		}
 
 		sqliteBindInteger(m_zoneInfoInsertStmt, 1, zoneNum);
@@ -2118,6 +2368,7 @@ void SQLite::createSQLiteNominalElectricEquipmentTable()
 		sqliteBindDouble(m_nominalElectricEquipmentInsertStmt, 9, DataHeatBalance::ZoneElectric(elecEquipNum).FractionConvected);
 		sqliteBindText(m_nominalElectricEquipmentInsertStmt, 10, DataHeatBalance::ZoneElectric(elecEquipNum).EndUseSubcategory);
 
+<<<<<<< HEAD
 		sqliteStepCommand(m_nominalElectricEquipmentInsertStmt);
 		sqliteResetCommand(m_nominalElectricEquipmentInsertStmt);
 	}
@@ -2136,6 +2387,474 @@ void SQLite::createSQLiteNominalGasEquipmentTable()
 		sqliteBindDouble(m_nominalGasEquipmentInsertStmt, 8, DataHeatBalance::ZoneGas(gasEquipNum).FractionLost);
 		sqliteBindDouble(m_nominalGasEquipmentInsertStmt, 9, DataHeatBalance::ZoneGas(gasEquipNum).FractionConvected);
 		sqliteBindText(m_nominalGasEquipmentInsertStmt, 10, DataHeatBalance::ZoneGas(gasEquipNum).EndUseSubcategory);
+=======
+void SQLite::addZoneListData( int const number, DataHeatBalance::ZoneListData const & zoneListData ) {
+	zoneLists.push_back(
+		std::unique_ptr<ZoneList>(new ZoneList(m_errorStream, m_db, number, zoneListData))
+	);
+}
+
+void SQLite::addSurfaceData( int const number, DataSurfaces::SurfaceData const & surfaceData, std::string const & surfaceClass ) {
+	surfaces.push_back(
+		std::unique_ptr<Surface>(new Surface(m_errorStream, m_db, number, surfaceData, surfaceClass))
+	);
+}
+
+void SQLite::addZoneGroupData( int const number, DataHeatBalance::ZoneGroupData const & zoneGroupData ) {
+	zoneGroups.push_back(
+		std::unique_ptr<ZoneGroup>(new ZoneGroup(m_errorStream, m_db, number, zoneGroupData))
+	);
+}
+
+void SQLite::addMaterialData( int const number, DataHeatBalance::MaterialProperties const & materialData ) {
+	materials.push_back(
+		std::unique_ptr<Material>(new Material(m_errorStream, m_db, number, materialData))
+	);
+}
+void SQLite::addConstructionData( int const number, DataHeatBalance::ConstructionData const & constructionData, double const & constructionUValue ) {
+	constructions.push_back(
+		std::unique_ptr<Construction>(new Construction(m_errorStream, m_db, number, constructionData, constructionUValue))
+	);
+}
+void SQLite::addNominalLightingData( int const number, DataHeatBalance::LightsData const & nominalLightingData ) {
+	nominalLightings.push_back(
+		std::unique_ptr<NominalLighting>(new NominalLighting(m_errorStream, m_db, number, nominalLightingData))
+	);
+}
+void SQLite::addNominalPeopleData( int const number, DataHeatBalance::PeopleData const & nominalPeopleData ) {
+	nominalPeoples.push_back(
+		std::unique_ptr<NominalPeople>(new NominalPeople(m_errorStream, m_db, number, nominalPeopleData))
+	);
+}
+void SQLite::addNominalElectricEquipmentData( int const number, DataHeatBalance::ZoneEquipData const & nominalElectricEquipmentData ) {
+	nominalElectricEquipments.push_back(
+		std::unique_ptr<NominalElectricEquipment>(new NominalElectricEquipment(m_errorStream, m_db, number, nominalElectricEquipmentData))
+	);
+}
+void SQLite::addNominalGasEquipmentData( int const number, DataHeatBalance::ZoneEquipData const & nominalGasEquipmentData ) {
+	nominalGasEquipments.push_back(
+		std::unique_ptr<NominalGasEquipment>(new NominalGasEquipment(m_errorStream, m_db, number, nominalGasEquipmentData))
+	);
+}
+void SQLite::addNominalSteamEquipmentData( int const number, DataHeatBalance::ZoneEquipData const & nominalSteamEquipmentData ) {
+	nominalSteamEquipments.push_back(
+		std::unique_ptr<NominalSteamEquipment>(new NominalSteamEquipment(m_errorStream, m_db, number, nominalSteamEquipmentData))
+	);
+}
+void SQLite::addNominalHotWaterEquipmentData( int const number, DataHeatBalance::ZoneEquipData const & nominalHotWaterEquipmentData ) {
+	nominalHotWaterEquipments.push_back(
+		std::unique_ptr<NominalHotWaterEquipment>(new NominalHotWaterEquipment(m_errorStream, m_db, number, nominalHotWaterEquipmentData))
+	);
+}
+void SQLite::addNominalOtherEquipmentData( int const number, DataHeatBalance::ZoneEquipData const & nominalOtherEquipmentData ) {
+	nominalOtherEquipments.push_back(
+		std::unique_ptr<NominalOtherEquipment>(new NominalOtherEquipment(m_errorStream, m_db, number, nominalOtherEquipmentData))
+	);
+}
+void SQLite::addNominalBaseboardData( int const number, DataHeatBalance::BBHeatData const & nominalBaseboardData ) {
+	nominalBaseboardHeats.push_back(
+		std::unique_ptr<NominalBaseboardHeat>(new NominalBaseboardHeat(m_errorStream, m_db, number, nominalBaseboardData))
+	);
+}
+void SQLite::addInfiltrationData( int const number, DataHeatBalance::InfiltrationData const & infiltrationData ) {
+	infiltrations.push_back(
+		std::unique_ptr<Infiltration>(new Infiltration(m_errorStream, m_db, number, infiltrationData))
+	);
+}
+void SQLite::addVentilationData( int const number, DataHeatBalance::VentilationData const & ventilationData ) {
+	ventilations.push_back(
+		std::unique_ptr<Ventilation>(new Ventilation(m_errorStream, m_db, number, ventilationData))
+	);
+}
+void SQLite::addRoomAirModelData( int const number, DataRoomAirModel::AirModelData const & roomAirModelData ) {
+	roomAirModels.push_back(
+		std::unique_ptr<RoomAirModel>(new RoomAirModel(m_errorStream, m_db, number, roomAirModelData))
+	);
+}
+
+bool SQLite::ZoneGroup::insertIntoSQLite ( sqlite3_stmt * insertStmt ) {
+	sqliteBindInteger(insertStmt, 1, number);
+	sqliteBindText(insertStmt, 2, name);
+	sqliteBindForeignKey(insertStmt, 3, zoneList);
+	sqliteBindInteger(insertStmt, 4, multiplier);
+
+	int rc = sqliteStepCommand(insertStmt);
+	bool validInsert = sqliteStepValidity( rc );
+	sqliteResetCommand(insertStmt);
+	return validInsert;
+}
+bool SQLite::Material::insertIntoSQLite ( sqlite3_stmt * insertStmt ) {
+	sqliteBindInteger(insertStmt, 1, number);
+	sqliteBindText(insertStmt, 2, name);
+	sqliteBindInteger(insertStmt, 3, group);
+	sqliteBindInteger(insertStmt, 4, roughness);
+	sqliteBindDouble(insertStmt, 5, conductivity);
+	sqliteBindDouble(insertStmt, 6, density);
+	sqliteBindDouble(insertStmt, 7, isoMoistCap);
+	sqliteBindDouble(insertStmt, 8, porosity);
+	sqliteBindDouble(insertStmt, 9, resistance);
+	sqliteBindLogical(insertStmt, 10, rOnly);
+	sqliteBindDouble(insertStmt, 11, specHeat);
+	sqliteBindDouble(insertStmt, 12, thermGradCoef);
+	sqliteBindDouble(insertStmt, 13, thickness);
+	sqliteBindDouble(insertStmt, 14, vaporDiffus);
+
+	int rc = sqliteStepCommand(insertStmt);
+	bool validInsert = sqliteStepValidity( rc );
+	sqliteResetCommand(insertStmt);
+	return validInsert;
+}
+bool SQLite::Construction::insertIntoSQLite ( sqlite3_stmt * insertStmt ) {
+	sqliteBindInteger(insertStmt, 1, number);
+	sqliteBindText(insertStmt, 2, name);
+	sqliteBindInteger(insertStmt, 3, totLayers);
+	sqliteBindInteger(insertStmt, 4, totSolidLayers);
+	sqliteBindInteger(insertStmt, 5, totGlassLayers);
+	sqliteBindDouble(insertStmt, 6, insideAbsorpVis);
+	sqliteBindDouble(insertStmt, 7, outsideAbsorpVis);
+	sqliteBindDouble(insertStmt, 8, insideAbsorpSolar);
+	sqliteBindDouble(insertStmt, 9, outsideAbsorpSolar);
+	sqliteBindDouble(insertStmt, 10, insideAbsorpThermal);
+	sqliteBindDouble(insertStmt, 11, outsideAbsorpThermal);
+	sqliteBindInteger(insertStmt, 12, outsideRoughness);
+	sqliteBindLogical(insertStmt, 13, typeIsWindow);
+	sqliteBindDouble(insertStmt, 14, uValue);
+
+	int rc = sqliteStepCommand(insertStmt);
+	bool validInsert = sqliteStepValidity( rc );
+	sqliteResetCommand(insertStmt);
+	return validInsert;
+}
+bool SQLite::Construction::insertIntoSQLite ( sqlite3_stmt * insertStmt, sqlite3_stmt * subInsertStmt ) {
+	bool constructionInsertValid = insertIntoSQLite( insertStmt );
+	if ( !constructionInsertValid ) return false;
+
+	bool valid = true;
+	for(auto const & constructionLayer : constructionLayers) {
+		bool validInsert = constructionLayer->insertIntoSQLite( subInsertStmt );
+		if ( valid && !validInsert ) valid = false;
+	}
+	return valid;
+}
+bool SQLite::Construction::ConstructionLayer::insertIntoSQLite( sqlite3_stmt * insertStmt ) {
+	sqliteBindForeignKey(insertStmt, 1, constructNumber);
+	sqliteBindInteger(insertStmt, 2, layerNumber);
+	sqliteBindForeignKey(insertStmt, 3, layerPoint);
+
+	int rc = sqliteStepCommand(insertStmt);
+	bool validInsert = sqliteStepValidity( rc );
+	sqliteResetCommand(insertStmt);
+	return validInsert;
+}
+bool SQLite::NominalLighting::insertIntoSQLite ( sqlite3_stmt * insertStmt ) {
+	sqliteBindInteger(insertStmt, 1, number);
+	sqliteBindText(insertStmt, 2, name);
+	sqliteBindForeignKey(insertStmt, 3, zonePtr);
+	sqliteBindForeignKey(insertStmt, 4, schedulePtr);
+	sqliteBindDouble(insertStmt, 5, designLevel);
+	sqliteBindDouble(insertStmt, 6, fractionReturnAir);
+	sqliteBindDouble(insertStmt, 7, fractionRadiant);
+	sqliteBindDouble(insertStmt, 8, fractionShortWave);
+	sqliteBindDouble(insertStmt, 9, fractionReplaceable);
+	sqliteBindDouble(insertStmt, 10, fractionConvected);
+	sqliteBindText(insertStmt, 11, endUseSubcategory);
+
+	int rc = sqliteStepCommand(insertStmt);
+	bool validInsert = sqliteStepValidity( rc );
+	sqliteResetCommand(insertStmt);
+	return validInsert;
+}
+bool SQLite::NominalPeople::insertIntoSQLite ( sqlite3_stmt * insertStmt ) {
+	sqliteBindInteger(insertStmt, 1, number);
+	sqliteBindText(insertStmt, 2, name);
+	sqliteBindForeignKey(insertStmt, 3, zonePtr);
+	sqliteBindDouble(insertStmt, 4, numberOfPeople);
+	sqliteBindForeignKey(insertStmt, 5, numberOfPeoplePtr);
+	sqliteBindForeignKey(insertStmt, 6, activityLevelPtr);
+	sqliteBindDouble(insertStmt, 7, fractionRadiant);
+	sqliteBindDouble(insertStmt, 8, fractionConvected);
+	sqliteBindForeignKey(insertStmt, 9, workEffPtr);
+	sqliteBindForeignKey(insertStmt, 10, clothingPtr);
+	sqliteBindForeignKey(insertStmt, 11, airVelocityPtr);
+	sqliteBindLogical(insertStmt, 12, fanger);
+	sqliteBindLogical(insertStmt, 13, pierce);
+	sqliteBindLogical(insertStmt, 14, ksu);
+	sqliteBindInteger(insertStmt, 15, mrtCalcType);
+	sqliteBindForeignKey(insertStmt, 16, surfacePtr);
+	sqliteBindText(insertStmt, 17, angleFactorListName);
+	sqliteBindInteger(insertStmt, 18, angleFactorListPtr);
+	sqliteBindDouble(insertStmt, 19, userSpecSensFrac);
+	sqliteBindLogical(insertStmt, 20, show55Warning);
+
+	int rc = sqliteStepCommand(insertStmt);
+	bool validInsert = sqliteStepValidity( rc );
+	sqliteResetCommand(insertStmt);
+	return validInsert;
+}
+bool SQLite::NominalElectricEquipment::insertIntoSQLite ( sqlite3_stmt * insertStmt ) {
+	sqliteBindInteger(insertStmt, 1, number);
+	sqliteBindText(insertStmt, 2, name);
+	sqliteBindForeignKey(insertStmt, 3, zonePtr);
+	sqliteBindForeignKey(insertStmt, 4, schedulePtr);
+	sqliteBindDouble(insertStmt, 5, designLevel);
+	sqliteBindDouble(insertStmt, 6, fractionLatent);
+	sqliteBindDouble(insertStmt, 7, fractionRadiant);
+	sqliteBindDouble(insertStmt, 8, fractionLost);
+	sqliteBindDouble(insertStmt, 9, fractionConvected);
+	sqliteBindText(insertStmt, 10, endUseSubcategory);
+
+	int rc = sqliteStepCommand(insertStmt);
+	bool validInsert = sqliteStepValidity( rc );
+	sqliteResetCommand(insertStmt);
+	return validInsert;
+}
+bool SQLite::NominalGasEquipment::insertIntoSQLite ( sqlite3_stmt * insertStmt ) {
+	sqliteBindInteger(insertStmt, 1, number);
+	sqliteBindText(insertStmt, 2, name);
+	sqliteBindForeignKey(insertStmt, 3, zonePtr);
+	sqliteBindForeignKey(insertStmt, 4, schedulePtr);
+	sqliteBindDouble(insertStmt, 5, designLevel);
+	sqliteBindDouble(insertStmt, 6, fractionLatent);
+	sqliteBindDouble(insertStmt, 7, fractionRadiant);
+	sqliteBindDouble(insertStmt, 8, fractionLost);
+	sqliteBindDouble(insertStmt, 9, fractionConvected);
+	sqliteBindText(insertStmt, 10, endUseSubcategory);
+
+	int rc = sqliteStepCommand(insertStmt);
+	bool validInsert = sqliteStepValidity( rc );
+	sqliteResetCommand(insertStmt);
+	return validInsert;
+}
+bool SQLite::NominalSteamEquipment::insertIntoSQLite ( sqlite3_stmt * insertStmt ) {
+	sqliteBindInteger(insertStmt, 1, number);
+	sqliteBindText(insertStmt, 2, name);
+	sqliteBindForeignKey(insertStmt, 3, zonePtr);
+	sqliteBindForeignKey(insertStmt, 4, schedulePtr);
+	sqliteBindDouble(insertStmt, 5, designLevel);
+	sqliteBindDouble(insertStmt, 6, fractionLatent);
+	sqliteBindDouble(insertStmt, 7, fractionRadiant);
+	sqliteBindDouble(insertStmt, 8, fractionLost);
+	sqliteBindDouble(insertStmt, 9, fractionConvected);
+	sqliteBindText(insertStmt, 10, endUseSubcategory);
+
+	int rc = sqliteStepCommand(insertStmt);
+	bool validInsert = sqliteStepValidity( rc );
+	sqliteResetCommand(insertStmt);
+	return validInsert;
+}
+bool SQLite::NominalHotWaterEquipment::insertIntoSQLite ( sqlite3_stmt * insertStmt ) {
+	sqliteBindInteger(insertStmt, 1, number);
+	sqliteBindText(insertStmt, 2, name);
+	sqliteBindForeignKey(insertStmt, 3, zonePtr);
+	sqliteBindForeignKey(insertStmt, 4, schedulePtr);
+	sqliteBindDouble(insertStmt, 5, designLevel);
+	sqliteBindDouble(insertStmt, 6, fractionLatent);
+	sqliteBindDouble(insertStmt, 7, fractionRadiant);
+	sqliteBindDouble(insertStmt, 8, fractionLost);
+	sqliteBindDouble(insertStmt, 9, fractionConvected);
+	sqliteBindText(insertStmt, 10, endUseSubcategory);
+
+	int rc = sqliteStepCommand(insertStmt);
+	bool validInsert = sqliteStepValidity( rc );
+	sqliteResetCommand(insertStmt);
+	return validInsert;
+}
+bool SQLite::NominalOtherEquipment::insertIntoSQLite ( sqlite3_stmt * insertStmt ) {
+	sqliteBindInteger(insertStmt, 1, number);
+	sqliteBindText(insertStmt, 2, name);
+	sqliteBindForeignKey(insertStmt, 3, zonePtr);
+	sqliteBindForeignKey(insertStmt, 4, schedulePtr);
+	sqliteBindDouble(insertStmt, 5, designLevel);
+	sqliteBindDouble(insertStmt, 6, fractionLatent);
+	sqliteBindDouble(insertStmt, 7, fractionRadiant);
+	sqliteBindDouble(insertStmt, 8, fractionLost);
+	sqliteBindDouble(insertStmt, 9, fractionConvected);
+	sqliteBindText(insertStmt, 10, endUseSubcategory);
+
+	int rc = sqliteStepCommand(insertStmt);
+	bool validInsert = sqliteStepValidity( rc );
+	sqliteResetCommand(insertStmt);
+	return validInsert;
+}
+bool SQLite::NominalBaseboardHeat::insertIntoSQLite ( sqlite3_stmt * insertStmt ) {
+	sqliteBindInteger(insertStmt, 1, number);
+	sqliteBindText(insertStmt, 2, name);
+	sqliteBindForeignKey(insertStmt, 3, zonePtr);
+	sqliteBindForeignKey(insertStmt, 4, schedPtr);
+	sqliteBindDouble(insertStmt, 5, capatLowTemperature);
+	sqliteBindDouble(insertStmt, 6, lowTemperature);
+	sqliteBindDouble(insertStmt, 7, capatHighTemperature);
+	sqliteBindDouble(insertStmt, 8, highTemperature);
+	sqliteBindDouble(insertStmt, 9, fractionRadiant);
+	sqliteBindDouble(insertStmt, 10, fractionConvected);
+	sqliteBindText(insertStmt, 11, endUseSubcategory);
+
+	int rc = sqliteStepCommand(insertStmt);
+	bool validInsert = sqliteStepValidity( rc );
+	sqliteResetCommand(insertStmt);
+	return validInsert;
+}
+bool SQLite::Infiltration::insertIntoSQLite ( sqlite3_stmt * insertStmt ) {
+	sqliteBindInteger(insertStmt, 1, number);
+	sqliteBindText(insertStmt, 2, name);
+	sqliteBindForeignKey(insertStmt, 3, zonePtr);
+	sqliteBindForeignKey(insertStmt, 4, schedPtr);
+	sqliteBindDouble(insertStmt, 5, designLevel);
+
+	int rc = sqliteStepCommand(insertStmt);
+	bool validInsert = sqliteStepValidity( rc );
+	sqliteResetCommand(insertStmt);
+	return validInsert;
+}
+bool SQLite::Ventilation::insertIntoSQLite ( sqlite3_stmt * insertStmt ) {
+	sqliteBindInteger(insertStmt, 1, number);
+	sqliteBindText(insertStmt, 2, name);
+	sqliteBindForeignKey(insertStmt, 3, zonePtr);
+	sqliteBindForeignKey(insertStmt, 4, schedPtr);
+	sqliteBindDouble(insertStmt, 5, designLevel);
+
+	int rc = sqliteStepCommand(insertStmt);
+	bool validInsert = sqliteStepValidity( rc );
+	sqliteResetCommand(insertStmt);
+	return validInsert;
+}
+bool SQLite::RoomAirModel::insertIntoSQLite ( sqlite3_stmt * insertStmt ) {
+	sqliteBindInteger(insertStmt, 1, number);
+	sqliteBindText(insertStmt, 2, airModelName);
+	sqliteBindInteger(insertStmt, 3, airModelType);
+	sqliteBindInteger(insertStmt, 4, tempCoupleScheme);
+	sqliteBindLogical(insertStmt, 5, simAirModel);
+
+	int rc = sqliteStepCommand(insertStmt);
+	bool validInsert = sqliteStepValidity( rc );
+	sqliteResetCommand(insertStmt);
+	return validInsert;
+}
+
+bool SQLite::Surface::insertIntoSQLite( sqlite3_stmt * insertStmt ) {
+	sqliteBindInteger(insertStmt, 1, number);
+	sqliteBindText(insertStmt, 2, name);
+	sqliteBindForeignKey(insertStmt, 3, construction);
+	sqliteBindText(insertStmt, 4, surfaceClass);
+	sqliteBindDouble(insertStmt, 5, area);
+	sqliteBindDouble(insertStmt, 6, grossArea);
+	sqliteBindDouble(insertStmt, 7, perimeter);
+	sqliteBindDouble(insertStmt, 8, azimuth);
+	sqliteBindDouble(insertStmt, 9, height);
+	sqliteBindDouble(insertStmt, 10, reveal);
+	sqliteBindInteger(insertStmt, 11, shape);
+	sqliteBindInteger(insertStmt, 12, sides);
+	sqliteBindDouble(insertStmt, 13, tilt);
+	sqliteBindDouble(insertStmt, 14, width);
+	sqliteBindLogical(insertStmt, 15, heatTransSurf);
+	sqliteBindForeignKey(insertStmt, 16, baseSurf);
+	sqliteBindForeignKey(insertStmt, 17, zone);
+	sqliteBindInteger(insertStmt, 18, extBoundCond);
+	sqliteBindLogical(insertStmt, 19, extSolar);
+	sqliteBindLogical(insertStmt, 20, extWind);
+
+	int rc = sqliteStepCommand(insertStmt);
+	bool validInsert = sqliteStepValidity( rc );
+	sqliteResetCommand(insertStmt);
+	return validInsert;
+}
+
+bool SQLite::ZoneList::insertIntoSQLite( sqlite3_stmt * insertStmt ) {
+	sqliteBindInteger(insertStmt, 1, number);
+	sqliteBindText(insertStmt, 2, name);
+
+	int rc = sqliteStepCommand(insertStmt);
+	bool validInsert = sqliteStepValidity( rc );
+	sqliteResetCommand(insertStmt);
+	return validInsert;	
+}
+
+bool SQLite::ZoneList::insertIntoSQLite( sqlite3_stmt * insertStmt, sqlite3_stmt * subInsertStmt ) {
+	bool zoneListInsertValid = insertIntoSQLite( insertStmt );
+	if ( !zoneListInsertValid ) return false;
+	bool valid = true;
+	for ( int i = 1; i <= zones.size(); ++i ) {
+		sqliteBindForeignKey(subInsertStmt, 1, number);
+		sqliteBindForeignKey(subInsertStmt, 2, zones( i ));
+		int rc = sqliteStepCommand(subInsertStmt);
+		bool validInsert = sqliteStepValidity( rc );
+		sqliteResetCommand(subInsertStmt);
+		if ( valid && !validInsert ) valid = false;
+	}
+	return valid;	
+}
+
+bool SQLite::Schedule::insertIntoSQLite( sqlite3_stmt * insertStmt ) {
+	sqliteBindInteger(insertStmt, 1, number);
+	sqliteBindText(insertStmt, 2, name);
+	sqliteBindText(insertStmt, 3, type);
+	sqliteBindDouble(insertStmt, 4, minValue);
+	sqliteBindDouble(insertStmt, 5, maxValue);
+
+	int rc = sqliteStepCommand(insertStmt);
+	bool validInsert = sqliteStepValidity( rc );
+	sqliteResetCommand(insertStmt);
+	return validInsert;
+}
+
+bool SQLite::Zone::insertIntoSQLite( sqlite3_stmt * insertStmt ) {
+	sqliteBindInteger(insertStmt, 1, number);
+	sqliteBindText(insertStmt, 2, name);
+	sqliteBindDouble(insertStmt, 3, relNorth);
+	sqliteBindDouble(insertStmt, 4, originX);
+	sqliteBindDouble(insertStmt, 5, originY);
+	sqliteBindDouble(insertStmt, 6, originZ);
+	sqliteBindDouble(insertStmt, 7, centroidX);
+	sqliteBindDouble(insertStmt, 8, centroidY);
+	sqliteBindDouble(insertStmt, 9, centroidZ);
+	sqliteBindInteger(insertStmt, 10, ofType);
+	sqliteBindInteger(insertStmt, 11, multiplier);
+	sqliteBindInteger(insertStmt, 12, listMultiplier);
+	sqliteBindDouble(insertStmt, 13, minimumX);
+	sqliteBindDouble(insertStmt, 14, maximumX);
+	sqliteBindDouble(insertStmt, 15, minimumY);
+	sqliteBindDouble(insertStmt, 16, maximumY);
+	sqliteBindDouble(insertStmt, 17, minimumZ);
+	sqliteBindDouble(insertStmt, 18, maximumZ);
+	sqliteBindDouble(insertStmt, 19, ceilingHeight);
+	sqliteBindDouble(insertStmt, 20, volume);
+	sqliteBindInteger(insertStmt, 21, insideConvectionAlgo);
+	sqliteBindInteger(insertStmt, 22, outsideConvectionAlgo);
+	sqliteBindDouble(insertStmt, 23, floorArea);
+	sqliteBindDouble(insertStmt, 24, extGrossWallArea);
+	sqliteBindDouble(insertStmt, 25, extNetWallArea);
+	sqliteBindDouble(insertStmt, 26, extWindowArea);
+	sqliteBindLogical(insertStmt, 27, isPartOfTotalArea);
+
+	int rc = sqliteStepCommand(insertStmt);
+	bool validInsert = sqliteStepValidity( rc );
+	sqliteResetCommand(insertStmt);
+	return validInsert;
+}
+
+SQLite::SQLiteData::SQLiteData( std::ostream & errorStream, std::shared_ptr<sqlite3> & db )
+	:
+	SQLiteProcedures( errorStream, db )
+	{}
+
+SQLiteProcedures::SQLiteProcedures( std::ostream & errorStream, std::shared_ptr<sqlite3> & db )
+	:
+	m_db(db),
+	m_writeOutputToSQLite(true),
+	m_connection(nullptr),
+	m_errorStream(errorStream)
+	{}
+
+SQLiteProcedures::SQLiteProcedures( std::ostream & errorStream, bool writeOutputToSQLite, std::string const & dbName, std::string const & errorFileName )
+	:
+	m_writeOutputToSQLite(writeOutputToSQLite),
+	m_connection(nullptr),
+	m_errorStream(errorStream)
+{
+	if( m_writeOutputToSQLite ) {
+		int rc = -1;
+		bool ok = true;
+>>>>>>> 3e6eb0a... Add zoneList and zoneGroup, add more integration
 
 		sqliteStepCommand(m_nominalGasEquipmentInsertStmt);
 		sqliteResetCommand(m_nominalGasEquipmentInsertStmt);
@@ -2161,6 +2880,7 @@ void SQLite::createSQLiteNominalSteamEquipmentTable()
 	}
 }
 
+<<<<<<< HEAD
 void SQLite::createSQLiteNominalHotWaterEquipmentTable()
 {
 	for(int hWEquipNum = 1; hWEquipNum <= DataHeatBalance::TotHWEquip; ++hWEquipNum) {
@@ -2174,6 +2894,17 @@ void SQLite::createSQLiteNominalHotWaterEquipmentTable()
 		sqliteBindDouble(m_nominalHotWaterEquipmentInsertStmt, 8, DataHeatBalance::ZoneHWEq(hWEquipNum).FractionLost);
 		sqliteBindDouble(m_nominalHotWaterEquipmentInsertStmt, 9, DataHeatBalance::ZoneHWEq(hWEquipNum).FractionConvected);
 		sqliteBindText(m_nominalHotWaterEquipmentInsertStmt, 10, DataHeatBalance::ZoneHWEq(hWEquipNum).EndUseSubcategory);
+=======
+		if( ok ) {
+			// Now open the output db for the duration of the simulation
+			rc = sqlite3_open_v2(dbName.c_str(), &m_connection, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, nullptr);
+			m_db = std::shared_ptr<sqlite3>(m_connection, sqlite3_close);
+			if( rc ) {
+				m_errorStream << "SQLite3 message, can't open new database: " << sqlite3_errmsg(m_connection) << std::endl;
+				ok = false;
+			}
+		}
+>>>>>>> 3e6eb0a... Add zoneList and zoneGroup, add more integration
 
 		sqliteStepCommand(m_nominalHotWaterEquipmentInsertStmt);
 		sqliteResetCommand(m_nominalHotWaterEquipmentInsertStmt);
