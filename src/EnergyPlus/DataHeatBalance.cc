@@ -249,7 +249,12 @@ namespace DataHeatBalance {
 	int const IntGainTypeOf_ZoneHVACForcedAirUserDefined( 43 );
 	int const IntGainTypeOf_AirTerminalUserDefined( 44 );
 	int const IntGainTypeOf_PackagedTESCoilTank( 45 );
+<<<<<<< HEAD
 	int const IntGainTypeOf_ElectricEquipmentITEAirCooled( 46 );
+=======
+	int const IntGainTypeOf_SecCoolingDXCoil( 46 );
+	int const IntGainTypeOf_SecHeatingDXCoil( 47 );
+>>>>>>> 2e70429... Saved working code.
 
 	//Parameters for checking surface heat transfer models
 	Real64 const HighDiffusivityThreshold( 1.e-5 ); // used to check if Material properties are out of line.

@@ -417,6 +417,21 @@ namespace DXCoils {
 		int SHRFTempCurveType2; // type of curve for SHRFTemp (cubic,quadratic,bi-quadratic)
 		bool UserSHRCurveExists; // TRUE if user specified SHR modifier curve exists
 
+		int SecZonePtr; // index to the zone where the secondary coil is placed
+		int SecCoilSHRCurveIndex; // index to the secondary coil sensible heat ratio modifier curve
+		Real64 SecCoilAirFlow; // secondary coil air flow rate
+		Real64 SecCoilAirFlowScalingFactor; // secondary coil air flow rate autosize scaling factor 
+		Real64 SecCoilRatedSHR; // secondary coil nominal or rated sensible heat ratio
+		int SecZoneAirNodeNum; // secondary zone air node number 
+		Real64 SecCoilSensibleHeatGainRate; // secondary zone sensible heat gain rate [W]
+		Real64 SecCoilTotalHeatRemovalRate; // secondary zone total heat removal rate [W]
+		Real64 SecCoilSensibleHeatRemovalRate; // secondary zone sensible heat removal rate [W]
+		Real64 SecCoilLatentHeatRemovalRate; // secondary zone latent heat removal rate [W]
+
+
+		
+
+
 		// Default Constructor
 		DXCoilData() :
 			DXCoilType_Num( 0 ),
@@ -613,7 +628,20 @@ namespace DXCoils {
 			SHRFTemp2( 0 ),
 			SHRFFlow2( 0 ),
 			SHRFTempCurveType2( 0 ),
-			UserSHRCurveExists( false )
+			UserSHRCurveExists( false ),
+
+			SecZonePtr( 0 ),
+			SecCoilSHRCurveIndex( 0 ),
+			SecCoilAirFlow( 0.0 ),
+			SecCoilAirFlowScalingFactor( 1.0 ),
+			SecCoilRatedSHR( 1.0 ),
+			SecZoneAirNodeNum( 0 ),
+			SecCoilSensibleHeatGainRate( 0.0 ),
+			SecCoilTotalHeatRemovalRate( 0.0 ),
+			SecCoilSensibleHeatRemovalRate( 0.0 ),
+			SecCoilLatentHeatRemovalRate( 0.0 )
+
+
 		{}
 
 		// Member Constructor
@@ -851,7 +879,18 @@ namespace DXCoils {
 			int const SHRFTemp2, // index of sensible heat ratio modifier curve
 			int const SHRFFlow2, // index of sensible heat ratio modifier curve
 			int const SHRFTempCurveType2, // type of curve for SHRFTemp (cubic,quadratic,bi-quadratic)
-			bool const UserSHRCurveExists // TRUE if user specified SHR modifier curve exists
+			bool const UserSHRCurveExists, // TRUE if user specified SHR modifier curve exists
+
+			int const SecZonePtr, // index to the zone where the secondary coil is placed
+			int const SecCoilSHRCurveIndex, // index to the secondary coil sensible heat ratio modifier curve
+			Real64 const SecCoilAirFlow, // secondary coil air flow rate
+			Real64 const SecCoilAirFlowScalingFactor, // secondary coil air flow rate autosize scaling factor 
+			Real64 const SecCoilRatedSHR, // secondary coil nominal or rated sensible heat ratio
+			int const SecZoneAirNodeNum, // secondary zone air node number 
+			Real64 const SecCoilSensibleHeatGainRate, // secondary zone sensible heat gain rate [W]
+			Real64 const SecCoilTotalHeatRemovalRate, // secondary zone total heat removal rate [W]
+			Real64 const SecCoilSensibleHeatRemovalRate, // secondary zone sensible heat removal rate [W]
+			Real64 const SecCoilLatentHeatRemovalRate // secondary zone latent heat removal rate [W]
 		) :
 			Name( Name ),
 			DXCoilType( DXCoilType ),
@@ -1086,7 +1125,18 @@ namespace DXCoils {
 			SHRFTemp2( SHRFTemp2 ),
 			SHRFFlow2( SHRFFlow2 ),
 			SHRFTempCurveType2( SHRFTempCurveType2 ),
-			UserSHRCurveExists( UserSHRCurveExists )
+			UserSHRCurveExists( UserSHRCurveExists ),
+
+			SecZonePtr( SecZonePtr ),
+			SecCoilSHRCurveIndex( SecCoilSHRCurveIndex ),
+			SecCoilAirFlow( SecCoilAirFlow ),
+			SecCoilAirFlowScalingFactor( SecCoilAirFlowScalingFactor ),
+			SecCoilRatedSHR( SecCoilRatedSHR ),
+			SecZoneAirNodeNum( SecZoneAirNodeNum ),
+			SecCoilSensibleHeatGainRate( SecCoilSensibleHeatGainRate ),
+			SecCoilTotalHeatRemovalRate( SecCoilTotalHeatRemovalRate ),
+			SecCoilSensibleHeatRemovalRate( SecCoilSensibleHeatRemovalRate ),
+			SecCoilLatentHeatRemovalRate( SecCoilLatentHeatRemovalRate )
 		{}
 
 	};
@@ -1476,6 +1526,9 @@ namespace DXCoils {
 
 	void
 	SetDXCoilTypeData( std::string const & CoilName ); // must match coil names for the coil type
+
+	void
+	CalcSecondaryDXCoils( int const DXCoilNum );
 
 	//     NOTICE
 

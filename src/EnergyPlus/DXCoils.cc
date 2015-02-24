@@ -22,11 +22,13 @@
 #include <DataPrecisionGlobals.hh>
 #include <DataSizing.hh>
 #include <DataWater.hh>
+#include <DataZoneEquipment.hh>
 #include <EMSManager.hh>
 #include <Fans.hh>
 #include <General.hh>
 #include <GeneralRoutines.hh>
 #include <GlobalNames.hh>
+#include <HeatBalanceInternalHeatGains.hh>
 #include <InputProcessor.hh>
 #include <NodeInputManager.hh>
 #include <OutAirNodeManager.hh>
@@ -338,6 +340,9 @@ namespace DXCoils {
 			ShowFatalError( "Preceding condition causes termination." );
 
 		}}
+
+		// calc secondary coil 
+		CalcSecondaryDXCoils( DXCoilNum );
 
 		// Update the unit outlet nodes
 		UpdateDXCoil( DXCoilNum );
@@ -846,6 +851,13 @@ namespace DXCoils {
 		using DataGlobals::emsCallFromComponentGetInput;
 		using EMSManager::ManageEMS;
 		using GlobalNames::VerifyUniqueCoilName;
+
+		using DataHeatBalance::IntGainTypeOf_SecCoolingDXCoil;
+		using DataHeatBalance::IntGainTypeOf_SecHeatingDXCoil;
+		using InputProcessor::FindItemInList;
+		using DataHeatBalance::Zone;
+		using DataLoopNode::NodeConnectionType_ZoneNode;
+
 
 		// Locals
 		// SUBROUTINE ARGUMENT DEFINITIONS:
@@ -1389,6 +1401,19 @@ namespace DXCoils {
 
 			if ( DXCoil( DXCoilNum ).SHRFTemp( 1 ) > 0 && DXCoil( DXCoilNum ).SHRFFlow( 1 ) > 0 ) {
 				DXCoil( DXCoilNum ).UserSHRCurveExists = true;
+			}
+
+			// A17; \field Zone Name for Condenser Placement
+			if ( !lAlphaBlanks( 17 ) && NumAlphas > 16 ) {
+				// NodeConnectionType_Sensor
+				DXCoil( DXCoilNum ).SecZoneAirNodeNum = GetOnlySingleNode( Alphas( 17 ), ErrorsFound, CurrentModuleObject, cAlphaFields( 17 ), NodeType_Air, NodeConnectionType_ZoneNode, 1, ObjectIsNotParent );
+				DXCoil( DXCoilNum ).SecZonePtr = FindItemInList( Alphas( 17 ), Zone.Name(), NumOfZones );
+				if ( DXCoil( DXCoilNum ).SecZonePtr > 0 ) {
+					SetupZoneInternalGain( DXCoil( DXCoilNum ).SecZonePtr, "Coil:Cooling:DX:SingleSpeed", DXCoil( DXCoilNum ).Name, IntGainTypeOf_SecCoolingDXCoil, DXCoil( DXCoilNum ).SecCoilSensibleHeatGainRate );
+				} else {
+					ShowSevereError( RoutineName + CurrentModuleObject + "=\"" + DXCoil( DXCoilNum ).Name + "\", invalid" );
+					ShowContinueError( "...not found " + cAlphaFields( 17 ) + "=\"" + Alphas( 17 ) + "\"." );
+				}
 			}
 
 		} // end of the Doe2 DX coil loop
@@ -2201,6 +2226,40 @@ namespace DXCoils {
 					ShowWarningError( RoutineName + CurrentModuleObject + "=\"" + DXCoil( DXCoilNum ).Name + "\", may be invalid" );
 					ShowContinueError( cAlphaFields( 13 ) + "=\"" + Alphas( 13 ) + "\", node does not appear in an OutdoorAir:NodeList or as an OutdoorAir:Node." );
 					ShowContinueError( "This node needs to be included in an air system or the coil model will not be valid, and the simulation continues" );
+				}
+			}
+
+			//A14, \field Zone Name for Evaporator Placement
+			if ( !lAlphaBlanks( 14 ) && NumAlphas > 13 ) {
+				DXCoil( DXCoilNum ).SecZoneAirNodeNum = GetOnlySingleNode( Alphas( 14 ), ErrorsFound, CurrentModuleObject, cAlphaFields( 14 ), NodeType_Air, NodeConnectionType_ZoneNode, 1, ObjectIsNotParent );
+				DXCoil( DXCoilNum ).SecZonePtr = FindItemInList( Alphas( 14 ), Zone.Name(), NumOfZones );
+				if ( DXCoil( DXCoilNum ).SecZonePtr > 0 ) {
+					SetupZoneInternalGain( DXCoil( DXCoilNum ).SecZonePtr, "Coil:Heating:DX:SingleSpeed", DXCoil( DXCoilNum ).Name, IntGainTypeOf_SecHeatingDXCoil, DXCoil( DXCoilNum ).SecCoilSensibleHeatRemovalRate, _, _, DXCoil( DXCoilNum ).SecCoilLatentHeatRemovalRate );
+				} else {
+					ShowSevereError( RoutineName + CurrentModuleObject + "=\"" + DXCoil( DXCoilNum ).Name + "\", invalid" );
+					ShowContinueError( "...not found " + cAlphaFields( 14 ) + "=\"" + Alphas( 14 ) + "\"." );
+				}
+			}
+			//N13, \field Secondary Coil Air Flow Rate
+			if ( !lNumericBlanks( 13 )  ) {
+				DXCoil( DXCoilNum ).SecCoilAirFlow = Numbers( 13 );
+			}
+			//N14, \field Secondary Coil Fan Flow Scaling Factor
+			if ( !lNumericBlanks( 14 ) ) {
+				DXCoil( DXCoilNum ).SecCoilAirFlowScalingFactor = Numbers( 14 );
+			}
+			//N15, \field Nominal Sensible Heat Ratio of Secondary Coil
+			if ( !lNumericBlanks( 15 ) ) {
+				DXCoil( DXCoilNum ).SecCoilRatedSHR = Numbers( 15 );
+			} else {
+				DXCoil( DXCoilNum ).SecCoilRatedSHR = 1.0;
+			}
+			//A15; \field Sensible Heat Ratio Modifier Curve Name
+			if ( !lAlphaBlanks( 15 ) ) {
+				DXCoil( DXCoilNum ).SecCoilSHRCurveIndex = GetCurveIndex( Alphas( 15 ) );
+				if ( DXCoil( DXCoilNum ).SecCoilSHRCurveIndex == 0 ) {
+					ShowSevereError( RoutineName + CurrentModuleObject + "=\"" + DXCoil( DXCoilNum ).Name + "\", invalid" );
+					ShowContinueError( "...not found " + cAlphaFields( 15 ) + "=\"" + Alphas( 15 ) + "\"." );
 				}
 			}
 
@@ -6460,6 +6519,9 @@ namespace DXCoils {
 		using General::RoundSigDigits;
 		using General::CreateSysTimeIntervalString;
 		using DataWater::WaterStorage;
+		
+		using DataHeatBalance::Zone;
+		using DataHeatBalance::IntGainTypeOf_DaylightingDeviceTubular;
 
 		// Locals
 		// SUBROUTINE ARGUMENT DEFINITIONS:
@@ -12899,6 +12961,220 @@ Label50: ;
 		}
 
 	}
+
+	void
+	CalcSecondaryDXCoils(
+		int const DXCoilNum
+		) {
+
+		// SUBROUTINE INFORMATION:
+		//       AUTHOR         B. Nigusse
+		//       DATE WRITTEN   February 2015
+		//       MODIFIED       na
+		//       RE-ENGINEERED  na
+
+		// PURPOSE OF THIS SUBROUTINE:
+		// Calculates secondary zone heat gain from secondary DX coils placed in a zone.
+
+		// METHODOLOGY EMPLOYED:
+		// Energy balance:  
+		//  (1) Condenser placed in a zone, the zone total (sensible) heat
+		//      gain rate is given Qcond = QEvap + WcompPluscondFanPower
+		//  (2) Evaporator placed in a zone, the zone total heat removal 
+		//      rate is given Qevap = Qcond - WcompPluscondFanPower
+		//      Furthermore, the evaporator total heat removal is split into
+		//      latent and sensible components using user specified SHR
+
+		// REFERENCES:
+		// na
+
+		// Using/Aliasing
+		using CurveManager::CurveValue;
+		using DataHVACGlobals::TimeStepSys;
+		using DataLoopNode::Node;
+
+		// Locals
+		// SUBROUTINE ARGUMENT DEFINITIONS:
+
+		// SUBROUTINE PARAMETER DEFINITIONS:
+		int const MaxIter( 30 );
+		Real64 const RelaxationFactor( 0.4 );
+		Real64 const Tolerance( 0.1 );
+		static std::string const RoutineName( "CalcSecondaryDXCoils" );
+
+		// INTERFACE BLOCK SPECIFICATIONS:
+		// na
+
+		// DERIVED TYPE DEFINITIONS:
+		// na
+
+		// SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+		Real64 CondInletTemp; // Condenser inlet temperature (C). secondary zone air node temperature 	
+		Real64 CondInletDryBulb; // condenser entering air dry-bulb temperature (C)
+		Real64 CondInletHumRat; // Condenser inlet humidity ratio (kg/kg). Zero for air-cooled condenser.
+		Real64 CondAirMassFlow; // Condenser air mass flow rate [kg/s]
+		Real64 CondInletEnthalpy; // condenser inlet enthalpy [J/kg]
+		Real64 CondAirSidePressure; // Outdoor barometric pressure at condenser (Pa)
+
+		Real64 OutdoorDryBulb; // outdoor air dry bulb local variable [C]
+		Real64 OutdoorHumRat; // outdoor air humidity ratio local [kg/kg]
+		Real64 OutdoorWetBulb; // outdoor air wetbulb local [C]
+
+		Real64 EvapAirVolFlow; // evaporator air volumetric flow [m3/s]
+		Real64 EvapAirMassFlow; // Condenser air mass flow rate [kg/s]
+		Real64 EvapInletDryBulb; // evaporator inlet air drybulb [C]
+		Real64 EvapInletHumRat; // evaporator inlet air humidity ratio [kg/kg]
+		Real64 EvapInletWetBulb; // evaporator inlet air wetbulb [C]
+		Real64 EvapInletEnthalpy; // evaporator inlet air enthalpy [J/kg]
+		Real64 AirMassFlowRatio; // evaporator inlet air mass flow divided by design mass flow [ ]
+		
+		Real64 SHRTempFac; // sensible heat ratio modification factor due to temps []
+		Real64 SHRFlowFac; // sensible heat ratio modification factor due to flow []
+		Real64 SHR; // sensible heat ratio
+		Real64 RhoAir; // secondary coil entering air density [kg/m3]
+		Real64 PartLoadRatio; // primary coil part-load ratio [-]
+
+		Real64 FullLoadOutAirEnth; // evaporator outlet full load enthalpy [J/kg]
+		Real64 FullLoadOutAirHumRat; // evaporator outlet humidity ratio at full load
+		Real64 FullLoadOutAirTemp; // evaporator outlet air temperature at full load [C]
+		Real64 EvapOutletAirEnthalpy; // evaporator outlet air enthalpy [J/kg]
+		Real64 EvapOutletAirHumRat; // evaporator outlet air humidity ratio [kg/kg]
+		Real64 EvapOutletAirTemp; // evaporator outlet drybulb [C]
+
+		Real64 DryCoilTestEvapInletHumRat;
+		Real64 DryCoilTestEvapInletWetBulb;
+		Real64 hADP;
+		Real64 tADP;
+		Real64 wADP;
+		Real64 hTinwADP;
+		Real64 hTinwout; // Enthalpy at inlet dry-bulb and outlet humidity ratio [J/kg]
+		Real64 SHRadp;
+		Real64 werror;
+		bool CoilMightBeDry;
+		int Counter;
+		bool Converged;
+
+
+		if ( DXCoil( DXCoilNum ).SecZonePtr == 0 ) {
+			DXCoil( DXCoilNum ).SecCoilSensibleHeatGainRate = 0.0;
+			DXCoil( DXCoilNum ).SecCoilSensibleHeatRemovalRate = 0.0;
+			DXCoil( DXCoilNum ).SecCoilLatentHeatRemovalRate = 0.0;
+			return;
+		}
+		// Select the correct unit type
+		{ auto const SELECT_CASE_var( DXCoil( DXCoilNum ).DXCoilType_Num );
+
+
+		if ( SELECT_CASE_var == CoilDX_HeatingEmpirical ) {
+
+			//// get the evaporator DX coil in the secondary zone 
+			DXCoil( DXCoilNum ).SecCoilTotalHeatRemovalRate = DXCoil( DXCoilNum ).TotalHeatingEnergyRate - DXCoil( DXCoilNum ).ElecHeatingPower;
+
+			PartLoadRatio = DXCoil( DXCoilNum ).PartLoadRatio;
+			EvapAirVolFlow = DXCoil( DXCoilNum ).EvapCondAirFlow( 1 );
+			EvapInletDryBulb = Node( DXCoil( DXCoilNum ).SecZoneAirNodeNum ).Temp;
+			EvapInletHumRat = Node( DXCoil( DXCoilNum ).SecZoneAirNodeNum ).HumRat;
+			EvapInletWetBulb = PsyTwbFnTdbWPb( EvapInletDryBulb, EvapInletHumRat, OutBaroPress, RoutineName );
+			EvapInletEnthalpy = Node( DXCoil( DXCoilNum ).SecZoneAirNodeNum ).Enthalpy;
+
+			CoilMightBeDry = false;
+			RhoAir = PsyRhoAirFnPbTdbW( OutBaroPress, EvapInletDryBulb, EvapInletHumRat );
+			EvapAirMassFlow = RhoAir * EvapAirVolFlow;
+			if ( ( EvapAirMassFlow > SmallMassFlow ) && ( PartLoadRatio > 0.0 ) ) { // coil is running
+				FullLoadOutAirEnth = EvapInletEnthalpy - ( DXCoil( DXCoilNum ).SecCoilTotalHeatRemovalRate / PartLoadRatio ) / EvapAirMassFlow;
+				FullLoadOutAirTemp = PsyTdbFnHW( FullLoadOutAirEnth, EvapInletHumRat );
+				if ( FullLoadOutAirTemp > PsyTsatFnHPb( FullLoadOutAirEnth, OutBaroPress, RoutineName ) ) {
+					CoilMightBeDry = true;
+					// find wADP, humidity ratio at apparatus dewpoint and inlet hum rat that would have dry coil
+					DryCoilTestEvapInletHumRat = EvapInletHumRat;
+					DryCoilTestEvapInletWetBulb = EvapInletWetBulb;
+					Counter = 0;
+					Converged = false;
+					while ( !Converged ) {
+						// coil bypass factor = 0.0
+						hADP = EvapInletEnthalpy - ( DXCoil( DXCoilNum ).SecCoilTotalHeatRemovalRate / PartLoadRatio ) / EvapAirMassFlow;
+						tADP = PsyTsatFnHPb( hADP, OutBaroPress, RoutineName );
+						wADP = min( EvapInletHumRat, PsyWFnTdbH( tADP, hADP, RoutineName ) );
+						hTinwADP = PsyHFnTdbW( EvapInletDryBulb, wADP );
+						if ( ( EvapInletEnthalpy - hADP ) > 1.e-10 ) {
+							SHRadp = min( ( hTinwADP - hADP ) / ( EvapInletEnthalpy - hADP ), 1.0 );
+						} else {
+							SHRadp = 1.0;
+						}
+						if ( ( wADP > DryCoilTestEvapInletHumRat ) || ( Counter >= 1 && Counter < MaxIter ) ) {
+							if ( DryCoilTestEvapInletHumRat <= 0.0 ) DryCoilTestEvapInletHumRat = 0.00001;
+							werror = ( DryCoilTestEvapInletHumRat - wADP ) / DryCoilTestEvapInletHumRat;
+
+							DryCoilTestEvapInletHumRat = RelaxationFactor * wADP + ( 1.0 - RelaxationFactor ) * DryCoilTestEvapInletHumRat;
+							DryCoilTestEvapInletWetBulb = PsyTwbFnTdbWPb( EvapInletDryBulb, DryCoilTestEvapInletHumRat, OutBaroPress, RoutineName );
+
+							++Counter;
+							if ( std::abs( werror ) <= Tolerance ) {
+								Converged = true;
+							} else {
+								Converged = false;
+							}
+						} else {
+							Converged = true;
+						}
+
+					}
+				}
+				CondInletDryBulb = Node( DXCoil( DXCoilNum ).AirInNode ).Temp;
+				SHRTempFac = CurveValue( DXCoil( DXCoilNum ).SecCoilSHRCurveIndex, EvapInletWetBulb, CondInletDryBulb );
+				//SHRFlowFac = CurveValue( DXCoil( DXCoilNum ).CoolingOnlySHRFFlowCurve, AirMassFlowRatio );
+				SHR = DXCoil( DXCoilNum ).SecCoilRatedSHR * SHRTempFac;
+				SHR = min( SHR, 1.0 ); // warn maybe
+				SHR = max( SHR, 0.0 ); // warn maybe
+
+				if ( CoilMightBeDry ) {
+					if ( ( EvapInletHumRat < DryCoilTestEvapInletHumRat ) && ( SHRadp > SHR ) ) { // coil is dry for sure
+						SHR = 1.0;
+					} else if ( SHRadp > SHR ) {
+						SHR = SHRadp;
+					}
+				}
+				//  Calculate full load output conditions
+				FullLoadOutAirEnth = EvapInletEnthalpy - ( DXCoil( DXCoilNum ).SecCoilTotalHeatRemovalRate / PartLoadRatio ) / EvapAirMassFlow;
+				hTinwout = EvapInletEnthalpy - ( 1.0 - SHR ) * ( ( DXCoil( DXCoilNum ).SecCoilTotalHeatRemovalRate / PartLoadRatio ) / EvapAirMassFlow );
+				FullLoadOutAirHumRat = PsyWFnTdbH( EvapInletDryBulb, hTinwout, RoutineName, true );
+				FullLoadOutAirTemp = PsyTdbFnHW( FullLoadOutAirEnth, FullLoadOutAirHumRat );
+				// when the air outlet temperature falls below the saturation temperature, it is reset to saturation temperature
+				if ( FullLoadOutAirTemp < PsyTsatFnHPb( FullLoadOutAirEnth, OutBaroPress, RoutineName ) ) {
+					FullLoadOutAirTemp = PsyTsatFnHPb( FullLoadOutAirEnth, OutBaroPress, RoutineName );
+					FullLoadOutAirHumRat = PsyWFnTdbH( FullLoadOutAirTemp, FullLoadOutAirEnth, RoutineName );
+					// Adjust SHR for the new outlet condition that balances energy
+					hTinwout = PsyHFnTdbW( EvapInletDryBulb, FullLoadOutAirHumRat );
+					SHR = 1.0 - ( EvapInletEnthalpy - hTinwout ) / ( DXCoil( DXCoilNum ).SecCoilTotalHeatRemovalRate / PartLoadRatio ) / EvapAirMassFlow;
+					SHR = min( SHR, 1.0 );
+				}
+				// calculate the sensible and latent zone load components
+				DXCoil( DXCoilNum ).SecCoilSensibleHeatRemovalRate = -( DXCoil( DXCoilNum ).SecCoilTotalHeatRemovalRate * SHR );
+				DXCoil( DXCoilNum ).SecCoilLatentHeatRemovalRate = -( DXCoil( DXCoilNum ).SecCoilTotalHeatRemovalRate - DXCoil( DXCoilNum ).SecCoilSensibleHeatRemovalRate );
+
+			} else {
+				//DX coil is off;
+				DXCoil( DXCoilNum ).SecCoilSensibleHeatGainRate = 0.0;
+				DXCoil( DXCoilNum ).SecCoilSensibleHeatRemovalRate = 0.0;
+				DXCoil( DXCoilNum ).SecCoilLatentHeatRemovalRate = 0.0;
+
+			}
+
+		} else if ( SELECT_CASE_var == CoilDX_CoolingSingleSpeed ) {
+
+				// total sensible heat gain of the secondary zone from the secondary coil (condenser)
+			DXCoil( DXCoilNum ).SecCoilSensibleHeatGainRate = DXCoil( DXCoilNum ).TotalCoolingEnergyRate + DXCoil( DXCoilNum ).ElecCoolingPower;
+
+		} else {
+			ShowSevereError( "Error detected in DX Coil=" + DXCoil( DXCoilNum ).Name );
+			ShowContinueError( "Invalid DX Coil Type=" + DXCoil( DXCoilNum ).DXCoilType );
+			ShowFatalError( "Preceding condition causes termination." );
+		}}
+
+	}
+
+
+
 
 	//     NOTICE
 
