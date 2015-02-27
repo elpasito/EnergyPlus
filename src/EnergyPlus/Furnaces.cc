@@ -5700,6 +5700,7 @@ namespace Furnaces {
 		using General::SolveRegulaFalsi;
 		using General::TrimSigDigits;
 		using DXCoils::DXCoilPartLoadRatio;
+		using DXCoils::DXCoil;
 
 		// Locals
 		// SUBROUTINE ARGUMENT DEFINITIONS:
@@ -5750,6 +5751,7 @@ namespace Furnaces {
 		Real64 CoolingHeatingPLRRatio; // ratio of cooling to heating PLR (MAX=1). Used in heating mode.
 		Real64 HeatingSensibleOutput;
 		Real64 HeatingLatentOutput;
+		Real64 OutdoorDryBulbTemp; // secondary coil (condenser) entering dry bulb temperature
 
 		// Set local variables
 		FurnaceOutletNode = Furnace( FurnaceNum ).FurnaceOutletNodeNum;
@@ -5765,6 +5767,12 @@ namespace Furnaces {
 		HeatCoilLoad = 0.0;
 		ReheatCoilLoad = 0.0;
 		PartLoadRatio = 0.0;
+
+		if ( DXCoil( Furnace( FurnaceNum ).HeatingCoilIndex ).IsSecondaryDXCoilInZone ) {
+			OutdoorDryBulbTemp = Node( DXCoil( Furnace( FurnaceNum ).HeatingCoilIndex ).SecZoneAirNodeNum ).Temp;
+		} else {
+			OutdoorDryBulbTemp = OutDryBulbTemp;
+		}
 
 		if ( FirstHVACIteration ) {
 			// Set selected values during first HVAC iteration
@@ -5953,7 +5961,7 @@ namespace Furnaces {
 								Furnace( FurnaceNum ).CompPartLoadRatio = 0.0;
 							}
 						} else {
-							if ( OutDryBulbTemp > Furnace( FurnaceNum ).MinOATCompressor ) {
+							if ( OutdoorDryBulbTemp > Furnace( FurnaceNum ).MinOATCompressor ) {
 								Furnace( FurnaceNum ).CompPartLoadRatio = PartLoadRatio;
 							} else {
 								Furnace( FurnaceNum ).CompPartLoadRatio = 0.0;
@@ -5971,7 +5979,7 @@ namespace Furnaces {
 								Furnace( FurnaceNum ).CompPartLoadRatio = 0.0;
 							}
 						} else {
-							if ( OutDryBulbTemp > Furnace( FurnaceNum ).MinOATCompressor ) {
+							if ( OutdoorDryBulbTemp > Furnace( FurnaceNum ).MinOATCompressor ) {
 								//       Check to see if Heat Pump compressor was allowed to run based on outdoor temperature
 								Furnace( FurnaceNum ).CompPartLoadRatio = 1.0;
 							} else {
@@ -6006,7 +6014,7 @@ namespace Furnaces {
 								}
 							}
 						} else {
-							if ( OutDryBulbTemp > Furnace( FurnaceNum ).MaxOATSuppHeat ) {
+							if ( OutdoorDryBulbTemp > Furnace( FurnaceNum ).MaxOATSuppHeat ) {
 								HeatCoilLoad = 0.0;
 								if ( SystemSensibleLoad < NoHeatOutput ) {
 									TempOutHeatingCoil = Node( FurnaceInletNode ).Temp;

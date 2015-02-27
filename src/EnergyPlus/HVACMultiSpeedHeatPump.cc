@@ -2724,6 +2724,7 @@ namespace HVACMultiSpeedHeatPump {
 		using HeatingCoils::SimulateHeatingCoilComponents;
 		using DXCoils::SimDXCoilMultiSpeed;
 		using DXCoils::DXCoilPartLoadRatio;
+		using DXCoils::DXCoil;
 
 		// Locals
 		// SUBROUTINE ARGUMENT DEFINITIONS:
@@ -2756,7 +2757,13 @@ namespace HVACMultiSpeedHeatPump {
 		// FLOW
 		OutletNode = MSHeatPump( MSHeatPumpNum ).AirOutletNodeNum;
 		InletNode = MSHeatPump( MSHeatPumpNum ).AirInletNodeNum;
-		OutsideDryBulbTemp = OutDryBulbTemp;
+		if ( DXCoil( MSHeatPump( MSHeatPumpNum ).DXHeatCoilIndex ).IsSecondaryDXCoilInZone ) {
+			OutsideDryBulbTemp = Node( DXCoil( MSHeatPump( MSHeatPumpNum ).DXHeatCoilIndex ).SecZoneAirNodeNum ).Temp;
+		} else if ( DXCoil( MSHeatPump( MSHeatPumpNum ).DXCoolCoilIndex ).IsSecondaryDXCoilInZone ) {
+			OutsideDryBulbTemp = Node( DXCoil( MSHeatPump( MSHeatPumpNum ).DXCoolCoilIndex ).SecZoneAirNodeNum ).Temp;
+		} else {
+			OutsideDryBulbTemp = OutDryBulbTemp;
+		}
 		FanOutletNode = MSHeatPump( MSHeatPumpNum ).FanOutletNode;
 		FanInletNode = MSHeatPump( MSHeatPumpNum ).FanInletNode;
 
