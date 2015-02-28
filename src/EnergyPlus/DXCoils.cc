@@ -850,8 +850,11 @@ namespace DXCoils {
 		using EMSManager::ManageEMS;
 		using GlobalNames::VerifyUniqueCoilName;
 
-		using DataHeatBalance::IntGainTypeOf_SecCoolingDXCoil;
-		using DataHeatBalance::IntGainTypeOf_SecHeatingDXCoil;
+		using DataHeatBalance::IntGainTypeOf_SecCoolingDXCoilSingleSpeed;
+		using DataHeatBalance::IntGainTypeOf_SecHeatingDXCoilSingleSpeed;
+		using DataHeatBalance::IntGainTypeOf_SecCoolingDXCoilTwoSpeed;
+		using DataHeatBalance::IntGainTypeOf_SecCoolingDXCoilMultiSpeed;
+		using DataHeatBalance::IntGainTypeOf_SecHeatingDXCoilMultiSpeed;
 		using InputProcessor::FindItemInList;
 		using DataHeatBalance::Zone;
 		using DataLoopNode::NodeConnectionType_ZoneNode;
@@ -1406,7 +1409,7 @@ namespace DXCoils {
 				DXCoil( DXCoilNum ).SecZoneAirNodeNum = GetOnlySingleNode( Alphas( 17 ), ErrorsFound, CurrentModuleObject, cAlphaFields( 17 ), NodeType_Air, NodeConnectionType_ZoneNode, 1, ObjectIsNotParent );
 				DXCoil( DXCoilNum ).SecZonePtr = FindItemInList( Alphas( 17 ), Zone.Name(), NumOfZones );
 				if ( DXCoil( DXCoilNum ).SecZonePtr > 0 ) {
-					SetupZoneInternalGain( DXCoil( DXCoilNum ).SecZonePtr, "Coil:Cooling:DX:SingleSpeed", DXCoil( DXCoilNum ).Name, IntGainTypeOf_SecCoolingDXCoil, DXCoil( DXCoilNum ).SecCoilSensibleHeatGainRate );
+					SetupZoneInternalGain( DXCoil( DXCoilNum ).SecZonePtr, "Coil:Cooling:DX:SingleSpeed", DXCoil( DXCoilNum ).Name, IntGainTypeOf_SecCoolingDXCoilSingleSpeed, DXCoil( DXCoilNum ).SecCoilSensibleHeatGainRate );
 					DXCoil( DXCoilNum ).IsSecondaryDXCoilInZone = true;
 				} else {
 					ShowSevereError( RoutineName + CurrentModuleObject + "=\"" + DXCoil( DXCoilNum ).Name + "\", invalid" );
@@ -2232,7 +2235,7 @@ namespace DXCoils {
 				DXCoil( DXCoilNum ).SecZoneAirNodeNum = GetOnlySingleNode( Alphas( 14 ), ErrorsFound, CurrentModuleObject, cAlphaFields( 14 ), NodeType_Air, NodeConnectionType_ZoneNode, 1, ObjectIsNotParent );
 				DXCoil( DXCoilNum ).SecZonePtr = FindItemInList( Alphas( 14 ), Zone.Name(), NumOfZones );
 				if ( DXCoil( DXCoilNum ).SecZonePtr > 0 ) {
-					SetupZoneInternalGain( DXCoil( DXCoilNum ).SecZonePtr, "Coil:Heating:DX:SingleSpeed", DXCoil( DXCoilNum ).Name, IntGainTypeOf_SecHeatingDXCoil, DXCoil( DXCoilNum ).SecCoilSensibleHeatRemovalRate, _, _, DXCoil( DXCoilNum ).SecCoilLatentHeatRemovalRate );
+					SetupZoneInternalGain( DXCoil( DXCoilNum ).SecZonePtr, "Coil:Heating:DX:SingleSpeed", DXCoil( DXCoilNum ).Name, IntGainTypeOf_SecHeatingDXCoilSingleSpeed, DXCoil( DXCoilNum ).SecCoilSensibleHeatRemovalRate, _, _, DXCoil( DXCoilNum ).SecCoilLatentHeatRemovalRate );
 					DXCoil( DXCoilNum ).IsSecondaryDXCoilInZone = true;
 				} else {
 					ShowSevereError( RoutineName + CurrentModuleObject + "=\"" + DXCoil( DXCoilNum ).Name + "\", invalid" );
@@ -2766,7 +2769,7 @@ namespace DXCoils {
 				DXCoil( DXCoilNum ).SecZoneAirNodeNum = GetOnlySingleNode( Alphas( 21 ), ErrorsFound, CurrentModuleObject, cAlphaFields( 21 ), NodeType_Air, NodeConnectionType_ZoneNode, 1, ObjectIsNotParent );
 				DXCoil( DXCoilNum ).SecZonePtr = FindItemInList( Alphas( 21 ), Zone.Name(), NumOfZones );
 				if ( DXCoil( DXCoilNum ).SecZonePtr > 0 ) {
-					SetupZoneInternalGain( DXCoil( DXCoilNum ).SecZonePtr, "Coil:Cooling:DX:TwoSpeed", DXCoil( DXCoilNum ).Name, IntGainTypeOf_SecCoolingDXCoil, DXCoil( DXCoilNum ).SecCoilSensibleHeatGainRate );
+					SetupZoneInternalGain( DXCoil( DXCoilNum ).SecZonePtr, "Coil:Cooling:DX:TwoSpeed", DXCoil( DXCoilNum ).Name, IntGainTypeOf_SecCoolingDXCoilTwoSpeed, DXCoil( DXCoilNum ).SecCoilSensibleHeatGainRate );
 					DXCoil( DXCoilNum ).IsSecondaryDXCoilInZone = true;
 				} else {
 					ShowSevereError( RoutineName + CurrentModuleObject + "=\"" + DXCoil( DXCoilNum ).Name + "\", invalid" );
@@ -3758,7 +3761,7 @@ namespace DXCoils {
 				DXCoil( DXCoilNum ).SecZoneAirNodeNum = GetOnlySingleNode( Alphas( 37 ), ErrorsFound, CurrentModuleObject, cAlphaFields( 37 ), NodeType_Air, NodeConnectionType_ZoneNode, 1, ObjectIsNotParent );
 				DXCoil( DXCoilNum ).SecZonePtr = FindItemInList( Alphas( 37 ), Zone.Name(), NumOfZones );
 				if ( DXCoil( DXCoilNum ).SecZonePtr > 0 ) {
-					SetupZoneInternalGain( DXCoil( DXCoilNum ).SecZonePtr, "Coil:Cooling:DX:MultiSpeed", DXCoil( DXCoilNum ).Name, IntGainTypeOf_SecCoolingDXCoil, DXCoil( DXCoilNum ).SecCoilSensibleHeatGainRate );
+					SetupZoneInternalGain( DXCoil( DXCoilNum ).SecZonePtr, "Coil:Cooling:DX:MultiSpeed", DXCoil( DXCoilNum ).Name, IntGainTypeOf_SecCoolingDXCoilMultiSpeed, DXCoil( DXCoilNum ).SecCoilSensibleHeatGainRate );
 					DXCoil( DXCoilNum ).IsSecondaryDXCoilInZone = true;
 				} else {
 					ShowSevereError( RoutineName + CurrentModuleObject + "=\"" + DXCoil( DXCoilNum ).Name + "\", invalid" );
@@ -4250,7 +4253,7 @@ namespace DXCoils {
 				DXCoil( DXCoilNum ).SecZoneAirNodeNum = GetOnlySingleNode( Alphas( 34 ), ErrorsFound, CurrentModuleObject, cAlphaFields( 34 ), NodeType_Air, NodeConnectionType_ZoneNode, 1, ObjectIsNotParent );
 				DXCoil( DXCoilNum ).SecZonePtr = FindItemInList( Alphas( 34 ), Zone.Name(), NumOfZones );
 				if ( DXCoil( DXCoilNum ).SecZonePtr > 0 ) {
-					SetupZoneInternalGain( DXCoil( DXCoilNum ).SecZonePtr, "Coil:Heating:DX:MultiSpeed", DXCoil( DXCoilNum ).Name, IntGainTypeOf_SecHeatingDXCoil, DXCoil( DXCoilNum ).SecCoilSensibleHeatRemovalRate, _, _, DXCoil( DXCoilNum ).SecCoilLatentHeatRemovalRate );
+					SetupZoneInternalGain( DXCoil( DXCoilNum ).SecZonePtr, "Coil:Heating:DX:MultiSpeed", DXCoil( DXCoilNum ).Name, IntGainTypeOf_SecHeatingDXCoilMultiSpeed, DXCoil( DXCoilNum ).SecCoilSensibleHeatRemovalRate, _, _, DXCoil( DXCoilNum ).SecCoilLatentHeatRemovalRate );
 					DXCoil( DXCoilNum ).IsSecondaryDXCoilInZone = true;
 				} else {
 					ShowSevereError( RoutineName + CurrentModuleObject + "=\"" + DXCoil( DXCoilNum ).Name + "\", invalid" );
@@ -5083,11 +5086,14 @@ namespace DXCoils {
 
 		}
 		DXCoil( DXCoilNum ).BasinHeaterPower = 0.0;
-		DXCoil( DXCoilNum ).CompressorPartLoadRatio = 0.0;
-		DXCoil( DXCoilNum ).SecCoilSensibleHeatGainRate = 0.0;
-		DXCoil( DXCoilNum ).SecCoilTotalHeatRemovalRate = 0.0;
-		DXCoil( DXCoilNum ).SecCoilSensibleHeatRemovalRate = 0.0;
-		DXCoil( DXCoilNum ).SecCoilLatentHeatRemovalRate = 0.0;
+
+		if ( DXCoil( DXCoilNum ).IsSecondaryDXCoilInZone ) {
+			DXCoil( DXCoilNum ).CompressorPartLoadRatio = 0.0;
+			DXCoil( DXCoilNum ).SecCoilSensibleHeatGainRate = 0.0;
+			DXCoil( DXCoilNum ).SecCoilTotalHeatRemovalRate = 0.0;
+			DXCoil( DXCoilNum ).SecCoilSensibleHeatRemovalRate = 0.0;
+			DXCoil( DXCoilNum ).SecCoilLatentHeatRemovalRate = 0.0;
+		}
 
 	}
 
@@ -7430,9 +7436,10 @@ namespace DXCoils {
 		DXCoilFanOpMode( DXCoilNum ) = FanOpMode;
 		DXCoil( DXCoilNum ).CondInletTemp = CondInletTemp;
 
-		// calc secondary coil 
-		CalcSecondaryDXCoils( DXCoilNum );
-
+		// calc secondary coil if specified 
+		if ( DXCoil( DXCoilNum ).IsSecondaryDXCoilInZone ) {
+			CalcSecondaryDXCoils( DXCoilNum );
+		}
 
 	}
 
@@ -8422,7 +8429,6 @@ Label50: ;
 			DXCoil( DXCoilNum ).OutletAirTemp = OutletAirTemp;
 			DXCoil( DXCoilNum ).OutletAirHumRat = OutletAirHumRat;
 			DXCoil( DXCoilNum ).OutletAirEnthalpy = OutletAirEnthalpy;
-
 			DXCoil( DXCoilNum ).CompressorPartLoadRatio = PartLoadRatio;
 
 		} else {
@@ -8455,9 +8461,10 @@ Label50: ;
 		DXCoilHeatInletAirDBTemp( DXCoilNum ) = InletAirDryBulbTemp;
 		DXCoilHeatInletAirWBTemp( DXCoilNum ) = InletAirWetBulbC;
 	
-		// calc secondary coil 
-		CalcSecondaryDXCoils( DXCoilNum );
-
+		// calc secondary coil if specified 
+		if ( DXCoil( DXCoilNum ).IsSecondaryDXCoilInZone ) {
+			CalcSecondaryDXCoils( DXCoilNum );
+		}
 
 	}
 
@@ -8913,8 +8920,11 @@ Label50: ;
 		DXCoilOutletHumRat( DXCoilNum ) = DXCoil( DXCoilNum ).OutletAirHumRat;
 		DXCoil( DXCoilNum ).CondInletTemp = CondInletTemp; // Save condenser inlet temp in the data structure
 
-		// calc secondary coil 
-		CalcSecondaryDXCoils( DXCoilNum );
+		// calc secondary coil if specified 
+		if ( DXCoil( DXCoilNum ).IsSecondaryDXCoilInZone ) {
+			CalcSecondaryDXCoils( DXCoilNum );
+		}
+
 	}
 
 	void
@@ -10238,8 +10248,10 @@ Label50: ;
 		DXCoilFanOpMode( DXCoilNum ) = FanOpMode;
 		DXCoil( DXCoilNum ).CondInletTemp = CondInletTemp; // Save condenser inlet temp in the data structure
 
-		// calc secondary coil 
-		CalcSecondaryDXCoils( DXCoilNum );
+		// calc secondary coil if specified 
+		if ( DXCoil( DXCoilNum ).IsSecondaryDXCoilInZone ) {
+			CalcSecondaryDXCoils( DXCoilNum );
+		}
 
 	}
 
@@ -10840,14 +10852,16 @@ Label50: ;
 		DXCoil( DXCoilNum ).PartLoadRatio = PLRHeating;
 		DXCoilFanOpMode( DXCoilNum ) = FanOpMode;
 		DXCoilPartLoadRatio( DXCoilNum ) = PLRHeating;
-
 		DXCoil( DXCoilNum ).MSSpeedNumLS = SpeedNumLS;
 		DXCoil( DXCoilNum ).MSSpeedNumHS = SpeedNumHS;
 		DXCoil( DXCoilNum ).MSSpeedRatio = SpeedRatio;
 		DXCoil( DXCoilNum ).MSCycRatio = CycRatio;
 
-		// calc secondary coil 
-		CalcSecondaryDXCoils( DXCoilNum );
+		// calc secondary coil if specified 
+		if ( DXCoil( DXCoilNum ).IsSecondaryDXCoilInZone ) {
+			CalcSecondaryDXCoils( DXCoilNum );
+		}
+
 	}
 
 	void
@@ -13241,7 +13255,6 @@ Label50: ;
 
 
 		if ( DXCoil( DXCoilNum ).IsSecondaryDXCoilInZone ) {
-			PartLoadRatio = DXCoil( DXCoilNum ).CompressorPartLoadRatio;
 			// Select the correct unit type
 			{ auto const SELECT_CASE_var( DXCoil( DXCoilNum ).DXCoilType_Num );
 			if ( ( SELECT_CASE_var == CoilDX_CoolingSingleSpeed ) || ( SELECT_CASE_var == CoilDX_CoolingTwoSpeed ) || ( SELECT_CASE_var == CoilDX_MultiSpeedCooling ) ) {

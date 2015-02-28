@@ -5770,6 +5770,7 @@ namespace Furnaces {
 
 		if ( DXCoil( Furnace( FurnaceNum ).HeatingCoilIndex ).IsSecondaryDXCoilInZone ) {
 			OutdoorDryBulbTemp = Node( DXCoil( Furnace( FurnaceNum ).HeatingCoilIndex ).SecZoneAirNodeNum ).Temp;
+			Furnace( FurnaceNum ).CondenserNodeNum = DXCoil( Furnace( FurnaceNum ).HeatingCoilIndex ).SecZoneAirNodeNum;
 		} else {
 			OutdoorDryBulbTemp = OutDryBulbTemp;
 		}
