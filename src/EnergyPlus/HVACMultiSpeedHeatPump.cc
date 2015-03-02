@@ -2757,13 +2757,22 @@ namespace HVACMultiSpeedHeatPump {
 		// FLOW
 		OutletNode = MSHeatPump( MSHeatPumpNum ).AirOutletNodeNum;
 		InletNode = MSHeatPump( MSHeatPumpNum ).AirInletNodeNum;
-		if ( DXCoil( MSHeatPump( MSHeatPumpNum ).DXHeatCoilIndex ).IsSecondaryDXCoilInZone ) {
-			OutsideDryBulbTemp = Node( DXCoil( MSHeatPump( MSHeatPumpNum ).DXHeatCoilIndex ).SecZoneAirNodeNum ).Temp;
-		} else if ( DXCoil( MSHeatPump( MSHeatPumpNum ).DXCoolCoilIndex ).IsSecondaryDXCoilInZone ) {
-			OutsideDryBulbTemp = Node( DXCoil( MSHeatPump( MSHeatPumpNum ).DXCoolCoilIndex ).SecZoneAirNodeNum ).Temp;
+		if ( MSHeatPump(MSHeatPumpNum).DXHeatCoilIndex > 0 ) {
+			if ( DXCoil( MSHeatPump( MSHeatPumpNum ).DXHeatCoilIndex ).IsSecondaryDXCoilInZone ) {
+				OutsideDryBulbTemp = Node( DXCoil( MSHeatPump( MSHeatPumpNum ).DXHeatCoilIndex ).SecZoneAirNodeNum ).Temp;
+			} else {
+				OutsideDryBulbTemp = OutDryBulbTemp;
+			}
+		} else if ( MSHeatPump( MSHeatPumpNum ).DXCoolCoilIndex > 0) {
+			if ( DXCoil( MSHeatPump( MSHeatPumpNum ).DXCoolCoilIndex ).IsSecondaryDXCoilInZone ) {
+				OutsideDryBulbTemp = Node( DXCoil( MSHeatPump( MSHeatPumpNum ).DXCoolCoilIndex ).SecZoneAirNodeNum ).Temp;
+			} else {
+				OutsideDryBulbTemp = OutDryBulbTemp;
+			}
 		} else {
 			OutsideDryBulbTemp = OutDryBulbTemp;
 		}
+
 		FanOutletNode = MSHeatPump( MSHeatPumpNum ).FanOutletNode;
 		FanInletNode = MSHeatPump( MSHeatPumpNum ).FanInletNode;
 
