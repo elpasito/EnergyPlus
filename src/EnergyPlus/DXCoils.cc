@@ -2242,37 +2242,38 @@ namespace DXCoils {
 					ShowContinueError( "...not found " + cAlphaFields( 14 ) + "=\"" + Alphas( 14 ) + "\"." );
 				}
 			}
-			//N13, \field Secondary Coil Air Flow Rate
-			if ( !lNumericBlanks( 13 )  ) {
-				DXCoil( DXCoilNum ).SecCoilAirFlow = Numbers( 13 );
-			}
-			//N14, \field Secondary Coil Fan Flow Scaling Factor
-			if ( !lNumericBlanks( 14 ) ) {
-				DXCoil( DXCoilNum ).SecCoilAirFlowScalingFactor = Numbers( 14 );
-			}
-			//N15, \field Nominal Sensible Heat Ratio of Secondary Coil
-			if ( !lNumericBlanks( 15 ) ) {
-				DXCoil( DXCoilNum ).SecCoilRatedSHR = Numbers( 15 );
-			} else {
-				DXCoil( DXCoilNum ).SecCoilRatedSHR = 1.0;
-			}
-			//A15, \field Sensible Heat Ratio Modifier Function of Temperature Curve Name
-			if ( !lAlphaBlanks( 15 ) ) {
-				DXCoil( DXCoilNum ).SecCoilSHRFT = GetCurveIndex( Alphas( 15 ) );
-				if ( DXCoil( DXCoilNum ).SecCoilSHRFT == 0 ) {
-					ShowSevereError( RoutineName + CurrentModuleObject + "=\"" + DXCoil( DXCoilNum ).Name + "\", invalid" );
-					ShowContinueError( "...not found " + cAlphaFields( 15 ) + "=\"" + Alphas( 15 ) + "\"." );
+			if ( DXCoil( DXCoilNum ).SecZonePtr > 0 ) {
+				//N13, \field Secondary Coil Air Flow Rate
+				if ( !lNumericBlanks( 13 ) ) {
+					DXCoil( DXCoilNum ).SecCoilAirFlow = Numbers( 13 );
+				}
+				//N14, \field Secondary Coil Fan Flow Scaling Factor
+				if ( !lNumericBlanks( 14 ) ) {
+					DXCoil( DXCoilNum ).SecCoilAirFlowScalingFactor = Numbers( 14 );
+				}
+				//N15, \field Nominal Sensible Heat Ratio of Secondary Coil
+				if ( !lNumericBlanks( 15 ) ) {
+					DXCoil( DXCoilNum ).SecCoilRatedSHR = Numbers( 15 );
+				} else {
+					DXCoil( DXCoilNum ).SecCoilRatedSHR = 1.0;
+				}
+				//A15, \field Sensible Heat Ratio Modifier Function of Temperature Curve Name
+				if ( !lAlphaBlanks( 15 ) ) {
+					DXCoil( DXCoilNum ).SecCoilSHRFT = GetCurveIndex( Alphas( 15 ) );
+					if ( DXCoil( DXCoilNum ).SecCoilSHRFT == 0 ) {
+						ShowSevereError( RoutineName + CurrentModuleObject + "=\"" + DXCoil( DXCoilNum ).Name + "\", invalid" );
+						ShowContinueError( "...not found " + cAlphaFields( 15 ) + "=\"" + Alphas( 15 ) + "\"." );
+					}
+				}
+				//A16; \field Sensible Heat Ratio Function of Flow Fraction Curve Name
+				if ( !lAlphaBlanks( 16 ) ) {
+					DXCoil( DXCoilNum ).SecCoilSHRFF = GetCurveIndex( Alphas( 16 ) );
+					if ( DXCoil( DXCoilNum ).SecCoilSHRFF == 0 ) {
+						ShowSevereError( RoutineName + CurrentModuleObject + "=\"" + DXCoil( DXCoilNum ).Name + "\", invalid" );
+						ShowContinueError( "...not found " + cAlphaFields( 16 ) + "=\"" + Alphas( 16 ) + "\"." );
+					}
 				}
 			}
-			//A16; \field Sensible Heat Ratio Function of Flow Fraction Curve Name
-			if ( !lAlphaBlanks( 16 ) ) {
-				DXCoil( DXCoilNum ).SecCoilSHRFF = GetCurveIndex( Alphas( 16 ) );
-				if ( DXCoil( DXCoilNum ).SecCoilSHRFF == 0 ) {
-					ShowSevereError( RoutineName + CurrentModuleObject + "=\"" + DXCoil( DXCoilNum ).Name + "\", invalid" );
-					ShowContinueError( "...not found " + cAlphaFields( 16 ) + "=\"" + Alphas( 16 ) + "\"." );
-				}
-			}
-			
 
 		} // end of the DX heating coil loop
 
@@ -4261,24 +4262,26 @@ namespace DXCoils {
 				}
 			}
 
-			for ( I = 1; I <= DXCoil( DXCoilNum ).NumOfSpeeds; ++I ) {
-				DXCoil( DXCoilNum ).MSSecCoilAirFlow( I ) = Numbers( 30 + ( I - 1 ) * 3 );
-				DXCoil( DXCoilNum ).MSSecCoilAirFlowScalingFactor( I ) = Numbers( 31 + ( I - 1 ) * 3 );
-				DXCoil( DXCoilNum ).MSSecCoilRatedSHR( I ) = Numbers( 32 + ( I - 1 ) * 3 );
-				// Read SHR modifier curve function of temperature
-				if ( !lAlphaBlanks( 35 + ( I - 1 ) * 2 ) ) {
-					DXCoil( DXCoilNum ).MSSecCoilSHRFT( I ) = GetCurveIndex( Alphas( 35 + ( I - 1 ) * 2 ) ); // convert curve name to number
-					if ( DXCoil( DXCoilNum ).MSSecCoilSHRFT( I ) == 0 ) {
-						ShowSevereError( RoutineName + CurrentModuleObject + "=\"" + DXCoil( DXCoilNum ).Name + "\", invalid" );
-						ShowContinueError( "...not found " + cAlphaFields( 35 + ( I - 1 ) * 2 ) + "=\"" + Alphas( 35 + ( I - 1 ) * 2 ) + "\"." );
-					} 	
-				}
-				// Read SHR modifier curve function of flow fraction
-				if ( !lAlphaBlanks( 36 + ( I - 1 ) * 2 ) ) {
-					DXCoil( DXCoilNum ).MSSecCoilSHRFF( I ) = GetCurveIndex( Alphas( 36 + ( I - 1 ) * 2 ) ); // convert curve name to number
-					if ( DXCoil( DXCoilNum ).MSSecCoilSHRFF( I ) == 0 ) {
-						ShowSevereError( RoutineName + CurrentModuleObject + "=\"" + DXCoil( DXCoilNum ).Name + "\", invalid" );
-						ShowContinueError( "...not found " + cAlphaFields( 36 + ( I - 1 ) * 2 ) + "=\"" + Alphas( 36 + ( I - 1 ) * 2 ) + "\"." );
+			if ( DXCoil( DXCoilNum ).SecZonePtr > 0 ) {
+				for ( I = 1; I <= DXCoil( DXCoilNum ).NumOfSpeeds; ++I ) {
+					DXCoil( DXCoilNum ).MSSecCoilAirFlow( I ) = Numbers( 30 + ( I - 1 ) * 3 );
+					DXCoil( DXCoilNum ).MSSecCoilAirFlowScalingFactor( I ) = Numbers( 31 + ( I - 1 ) * 3 );
+					DXCoil( DXCoilNum ).MSSecCoilRatedSHR( I ) = Numbers( 32 + ( I - 1 ) * 3 );
+					// Read SHR modifier curve function of temperature
+					if ( !lAlphaBlanks( 35 + ( I - 1 ) * 2 ) ) {
+						DXCoil( DXCoilNum ).MSSecCoilSHRFT( I ) = GetCurveIndex( Alphas( 35 + ( I - 1 ) * 2 ) ); // convert curve name to number
+						if ( DXCoil( DXCoilNum ).MSSecCoilSHRFT( I ) == 0 ) {
+							ShowSevereError( RoutineName + CurrentModuleObject + "=\"" + DXCoil( DXCoilNum ).Name + "\", invalid" );
+							ShowContinueError( "...not found " + cAlphaFields( 35 + ( I - 1 ) * 2 ) + "=\"" + Alphas( 35 + ( I - 1 ) * 2 ) + "\"." );
+						} 	
+					}
+					// Read SHR modifier curve function of flow fraction
+					if ( !lAlphaBlanks( 36 + ( I - 1 ) * 2 ) ) {
+						DXCoil( DXCoilNum ).MSSecCoilSHRFF( I ) = GetCurveIndex( Alphas( 36 + ( I - 1 ) * 2 ) ); // convert curve name to number
+						if ( DXCoil( DXCoilNum ).MSSecCoilSHRFF( I ) == 0 ) {
+							ShowSevereError( RoutineName + CurrentModuleObject + "=\"" + DXCoil( DXCoilNum ).Name + "\", invalid" );
+							ShowContinueError( "...not found " + cAlphaFields( 36 + ( I - 1 ) * 2 ) + "=\"" + Alphas( 36 + ( I - 1 ) * 2 ) + "\"." );
+						}
 					}
 				}
 			}
@@ -4581,7 +4584,9 @@ namespace DXCoils {
 			SetupOutputVariable( "Cooling Coil Electric Power [W]", DXCoil( DXCoilNum ).ElecCoolingPower, "System", "Average", DXCoil( DXCoilNum ).Name );
 			SetupOutputVariable( "Cooling Coil Electric Energy [J]", DXCoil( DXCoilNum ).ElecCoolingConsumption, "System", "Sum", DXCoil( DXCoilNum ).Name, _, "Electric", "COOLING", _, "System" );
 			SetupOutputVariable( "Cooling Coil Runtime Fraction []", DXCoil( DXCoilNum ).CoolingCoilRuntimeFraction, "System", "Average", DXCoil( DXCoilNum ).Name );
-
+			if ( DXCoil( DXCoilNum ).IsSecondaryDXCoilInZone ) {
+				SetupOutputVariable( "Secondary Coil Heat Rejection Rate [W]", DXCoil( DXCoilNum ).SecCoilSensibleHeatGainRate, "System", "Average", DXCoil( DXCoilNum ).Name );
+			}
 			if ( DXCoil( DXCoilNum ).ReportEvapCondVars ) {
 				SetupOutputVariable( "Cooling Coil Condenser Inlet Temperature [C]", DXCoil( DXCoilNum ).CondInletTemp, "System", "Average", DXCoil( DXCoilNum ).Name );
 				SetupOutputVariable( "Cooling Coil Evaporative Condenser Water Volume [m3]", DXCoil( DXCoilNum ).EvapWaterConsump, "System", "Sum", DXCoil( DXCoilNum ).Name, _, "Water", "Cooling", _, "System" );

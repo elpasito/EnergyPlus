@@ -43271,7 +43271,7 @@ Coil:Heating:DX:SingleSpeed,
        \note on the secondary zone air node wet-bulb temperature and the heating DX coil entering 
        \note air dry-bulb temperature.  This is an optional input field.  If this input field is left 
        \note blank, then the nominal sensible heat ratio specified in the field above will be used.
-  A16; \field Sensible Heat Ratio Function of Flow Fraction Curve Name
+  A16; \field Sensible Heat Ratio Modifier Function of Flow Fraction Curve Name
        \type object-list
        \object-list QuadraticCubicCurves
        \object-list UniVariateTables
@@ -43823,7 +43823,7 @@ Coil:Heating:DX:MultiSpeed,
        \note on the secondary zone air node wet-bulb temperature and the heating DX coil entering 
        \note air dry-bulb temperature.  This is an optional input field.  If this input field is left 
        \note blank, then the nominal sensible heat ratio specified in the field above will be used.
-  A36, \field Speed 1 Sensible Heat Ratio Function of Flow Fraction Curve Name
+  A36, \field Speed 1 Sensible Heat Ratio Modifier Function of Flow Fraction Curve Name
        \type object-list
        \object-list QuadraticCubicCurves
        \object-list UniVariateTables
@@ -43872,7 +43872,7 @@ Coil:Heating:DX:MultiSpeed,
        \note on the secondary zone air node wet-bulb temperature and the heating DX coil entering 
        \note air dry-bulb temperature.  This is an optional input field.  If this input field is left 
        \note blank, then the nominal sensible heat ratio specified in the field above will be used.
-  A38, \field Speed 2 Sensible Heat Ratio Function of Flow Fraction Curve Name
+  A38, \field Speed 2 Sensible Heat Ratio Modifier Function of Flow Fraction Curve Name
        \type object-list
        \object-list QuadraticCubicCurves
        \object-list UniVariateTables
@@ -43921,7 +43921,7 @@ Coil:Heating:DX:MultiSpeed,
        \note on the secondary zone air node wet-bulb temperature and the heating DX coil entering 
        \note air dry-bulb temperature.  This is an optional input field.  If this input field is left 
        \note blank, then the nominal sensible heat ratio specified in the field above will be used.
-  A40, \field Speed 3 Sensible Heat Ratio Function of Flow Fraction Curve Name
+  A40, \field Speed 3 Sensible Heat Ratio Modifier Function of Flow Fraction Curve Name
        \type object-list
        \object-list QuadraticCubicCurves
        \object-list UniVariateTables
@@ -43970,7 +43970,7 @@ Coil:Heating:DX:MultiSpeed,
        \note on the secondary zone air node wet-bulb temperature and the heating DX coil entering 
        \note air dry-bulb temperature.  This is an optional input field.  If this input field is left 
        \note blank, then the nominal sensible heat ratio specified in the field above will be used.
-  A42; \field Speed 4 Sensible Heat Ratio Function of Flow Fraction Curve Name
+  A42; \field Speed 4 Sensible Heat Ratio Modifier Function of Flow Fraction Curve Name
        \type object-list
        \object-list QuadraticCubicCurves
        \object-list UniVariateTables
