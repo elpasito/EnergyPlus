@@ -5498,8 +5498,7 @@ namespace DXCoils {
 					DataFractionUsedForSizing = 0.0;
 				}
 
-				if ( SizeSecDXCoil ) { // autosize secondary coil air flow rate for AirCooled condenser type
-					// Rated Secondary Coil Airflow Rates				
+				if ( SizeSecDXCoil ) { // autosize secondary coil air flow rate for AirCooled condenser type			
 					IsAutoSize = false;
 					if ( DXCoil( DXCoilNum ).SecCoilAirFlow == AutoSize ) {
 						IsAutoSize = true;
@@ -5508,11 +5507,11 @@ namespace DXCoils {
 					SecCoilAirFlowDes = DXCoil( DXCoilNum ).RatedAirVolFlowRate( 1 ) * DXCoil( DXCoilNum ).SecCoilAirFlowScalingFactor;
 					if ( IsAutoSize ) {
 						DXCoil( DXCoilNum ).SecCoilAirFlow = SecCoilAirFlowDes;
-						ReportSizingOutput( DXCoil( DXCoilNum ).DXCoilType, DXCoil( DXCoilNum ).Name, " Design Size Secondary Coil Air Flow Rate [m3/s]", SecCoilAirFlowDes );
+						ReportSizingOutput( DXCoil( DXCoilNum ).DXCoilType, DXCoil( DXCoilNum ).Name, "Design Size Secondary Coil Air Flow Rate [m3/s]", SecCoilAirFlowDes );
 					} else {
 						if ( DXCoil( DXCoilNum ).SecCoilAirFlow > 0.0 && SecCoilAirFlowDes > 0.0 && !HardSizeNoDesRun ) {
 							SecCoilAirFlowUser = DXCoil( DXCoilNum ).SecCoilAirFlow;
-							ReportSizingOutput( DXCoil( DXCoilNum ).DXCoilType, DXCoil( DXCoilNum ).Name, " Design Size Secondary Coil Air Flow Rate [m3/s]", SecCoilAirFlowDes, " User-Specified Secondary Coil Air Flow Rate [m3/s]", SecCoilAirFlowUser );
+							ReportSizingOutput( DXCoil( DXCoilNum ).DXCoilType, DXCoil( DXCoilNum ).Name, "Design Size Secondary Coil Air Flow Rate [m3/s]", SecCoilAirFlowDes, "User-Specified Secondary Coil Air Flow Rate [m3/s]", SecCoilAirFlowUser );
 							if ( DisplayExtraWarnings ) {
 								if ( ( std::abs( SecCoilAirFlowDes - SecCoilAirFlowUser ) / SecCoilAirFlowUser ) > AutoVsHardSizingThreshold ) {
 									ShowMessage( "SizeDxCoil: Potential issue with equipment sizing for " + DXCoil( DXCoilNum ).DXCoilType + ' ' + DXCoil( DXCoilNum ).Name );
@@ -13342,6 +13341,7 @@ Label50: ;
 					TotalHeatRemovalRate = max( 0.0, DXCoil( DXCoilNum ).TotalHeatingEnergyRate - DXCoil( DXCoilNum ).ElecHeatingPower );
 				} else {
 					TotalHeatRemovalRate = 0.0;
+					DXCoil( DXCoilNum ).SecCoilSHR = 0.0;
 					return;
 				}
 				DXCoil( DXCoilNum ).SecCoilTotalHeatRemovalRate = -TotalHeatRemovalRate; // +DXCoil( DXCoilNum ).DefrostPower;
@@ -13371,7 +13371,7 @@ Label50: ;
 						FullLoadOutAirHumRat = PsyWFnTdbH( FullLoadOutAirTemp, FullLoadOutAirEnth, RoutineName );
 						// Adjust SHR for the new outlet condition that balances energy
 						hTinwout = PsyHFnTdbW( EvapInletDryBulb, FullLoadOutAirHumRat );
-						SHR = 1.0 - ( EvapInletEnthalpy - hTinwout ) / ( TotalHeatRemovalRate / PartLoadRatio ) / EvapAirMassFlow;
+						SHR = 1.0 - ( EvapInletEnthalpy - hTinwout ) / ( ( TotalHeatRemovalRate / PartLoadRatio ) / EvapAirMassFlow );
 						SHR = min( SHR, 1.0 );
 					}
 					// calculate the sensible and latent zone heat removal (extraction) rate by the secondary coil
@@ -13391,7 +13391,7 @@ Label50: ;
 				EvapInletHumRat = Node( DXCoil( DXCoilNum ).SecZoneAirNodeNum ).HumRat;
 				RhoAir = PsyRhoAirFnPbTdbW( OutBaroPress, EvapInletDryBulb, EvapInletHumRat );
 				MSSpeedRatio = DXCoil( DXCoilNum ).MSSpeedRatio;
-				MSCycRatio = DXCoil( DXCoilNum ).MSSpeedRatio;
+				MSCycRatio = DXCoil( DXCoilNum ).MSCycRatio;
 				MSSpeedNumHS = DXCoil( DXCoilNum ).MSSpeedNumHS;
 				MSSpeedNumLS = DXCoil( DXCoilNum ).MSSpeedNumLS;
 				if ( MSSpeedRatio > 0.0 ) {
@@ -13588,7 +13588,7 @@ Label50: ;
 				}
 			}
 		}
-		// determine SHR from user specified nominal value and SHR modifier curve
+		// determine SHR from user specified nominal value and SHR modifier curves
 		SHR = CalcSHRUserDefinedCurves( CondInletDryBulb, EvapInletWetBulb, SecCoilFlowFraction, SecCoilSHRFT, SecCoilSHRFF, SecCoilRatedSHR );
 		if ( CoilMightBeDry ) {
 			if ( ( EvapInletHumRat < DryCoilTestEvapInletHumRat ) && ( SHRadp > SHR ) ) { // coil is dry for sure
