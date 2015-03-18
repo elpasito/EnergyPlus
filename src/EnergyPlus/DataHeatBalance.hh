@@ -230,20 +230,12 @@ namespace DataHeatBalance {
 	extern int const IntGainTypeOf_ZoneHVACForcedAirUserDefined;
 	extern int const IntGainTypeOf_AirTerminalUserDefined;
 	extern int const IntGainTypeOf_PackagedTESCoilTank;
-<<<<<<< HEAD
-<<<<<<< HEAD
 	extern int const IntGainTypeOf_ElectricEquipmentITEAirCooled;
-=======
-	extern int const IntGainTypeOf_SecCoolingDXCoil;
-	extern int const IntGainTypeOf_SecHeatingDXCoil;
->>>>>>> 2e70429... Saved working code.
-=======
 	extern int const IntGainTypeOf_SecCoolingDXCoilSingleSpeed;
 	extern int const IntGainTypeOf_SecHeatingDXCoilSingleSpeed;
 	extern int const IntGainTypeOf_SecCoolingDXCoilTwoSpeed;
 	extern int const IntGainTypeOf_SecCoolingDXCoilMultiSpeed;
 	extern int const IntGainTypeOf_SecHeatingDXCoilMultiSpeed;
->>>>>>> 84dd722... More cleanup.
 
 	//Parameters for checking surface heat transfer models
 	extern Real64 const HighDiffusivityThreshold; // used to check if Material properties are out of line.
